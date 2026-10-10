@@ -70,19 +70,21 @@ button:hover{background:#ff66aa;}
 .msg-success{background:#d4edda;color:#155724;}
 .msg-warn{background:#fff3cd;color:#856404;}
 
+/* 修改日历：格子加大，去掉emoji，字体适度 */
 .calendar-grid{
   display:grid;
   grid-template-columns: repeat(7, 1fr);
-  gap:8px;
+  gap:10px;
   margin-top:12px;
 }
 .calendar-day{
   border-radius:12px;
-  padding:6px 2px;
+  padding:10px 4px;
+  min-height:90px;
   text-align:center;
   cursor:pointer;
-  font-size:11px;
-  line-height:1.2;
+  font-size:12px;
+  line-height:1.4;
 }
 .calendar-day:hover{filter:brightness(0.95);}
 .cal-empty{background:#ffe6f2;}
@@ -171,10 +173,10 @@ button:hover{background:#ff66aa;}
     <div>蛋白合计<br/><span id="showTotalPro">0</span> g</div>
   </div>
   <div class="stat-row">
-    <div>🌅晨起体重(kg)
+    <div>晨起体重(kg)
       <input type="text" id="morningWeight" placeholder="例如58.0" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" onblur="saveWeight()">
     </div>
-    <div>🌙晚间体重(kg)
+    <div>晚间体重(kg)
       <input type="text" id="nightWeight" placeholder="例如58.3" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" onblur="saveWeight()">
     </div>
   </div>
@@ -183,10 +185,10 @@ button:hover{background:#ff66aa;}
 
   <div class="row">
     <select id="mealType">
-      <option value="breakfast">🌞早餐</option>
-      <option value="lunch">☀️午餐</option>
-      <option value="dinner">🌙晚餐</option>
-      <option value="snack">🍬加餐/零食</option>
+      <option value="breakfast">早餐</option>
+      <option value="lunch">午餐</option>
+      <option value="dinner">晚餐</option>
+      <option value="snack">加餐/零食</option>
     </select>
     <input id="foodInput" placeholder="粘贴格式：食物名称｜热量｜蛋白｜碳水｜脂肪" oninput="autoFillNutrition()">
   </div>
@@ -515,7 +517,7 @@ function renderMonth(){
     let wm = (dayData?.wMorning) || "-";
     let wn = (dayData?.wNight) || "-";
     calHtml += `<div class="calendar-day ${cls}" onclick="showDayDetail('${dayStr}')">
-      ${d}号<br/>${dayTotal.kcal}kcal<br/>🌅${wm} 🌙${wn}
+      ${d}号<br/>${dayTotal.kcal}kcal<br/>早:${wm}<br/>晚:${wn}
     </div>`
   }
   calendarBox.innerHTML = calHtml;
@@ -530,7 +532,7 @@ function copyTodayLog(){
     showMsg("该日期还没有记录",false);
     return;
   }
-  const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
+  const mealMap = {breakfast:"早餐",lunch:"午餐",dinner:"晚餐",snack:"加餐"};
   let outputText = `【${dayKey} 饮食记录，多囊减脂，请帮我点评+给建议】\n`;
   if(dayData.wMorning) outputText += `晨起体重：${dayData.wMorning}kg\n`;
   if(dayData.wNight) outputText += `晚间体重：${dayData.wNight}kg\n`;
@@ -580,7 +582,7 @@ function showDayDetail(dayStr){
   if(!dayData || !Array.isArray(dayData.items) || dayData.items.length===0){
     let info = `<strong>📆${dayStr}</strong><br/>`;
     if(dayData){
-      info += `🌅晨起：${dayData.wMorning||"无记录"} kg｜🌙晚间：${dayData.wNight||"无记录"} kg<br/>`;
+      info += `早：${dayData.wMorning||"无记录"} kg｜晚：${dayData.wNight||"无记录"} kg<br/>`;
       if(Array.isArray(dayData.exercises)&&dayData.exercises.length>0){
         info += `<br/>🏃运动记录：<br/>`;
         dayData.exercises.forEach(ex=>info += `${ex.name}｜${ex.burn}kcal<br/>`)
@@ -592,10 +594,10 @@ function showDayDetail(dayStr){
     return;
   }
   const dayTotal = getDayTotal(dayData);
-  const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
+  const mealMap = {breakfast:"早餐",lunch:"午餐",dinner:"晚餐",snack:"加餐"};
 
   let html = `<strong>📆${dayStr}</strong>  总热量：${dayTotal.kcal} kcal｜运动消耗：${dayTotal.exBurn} kcal｜净摄入：${dayTotal.net} kcal｜蛋白${dayTotal.pro.toFixed(1)}g<br/>`;
-  html += `<span class="tip">🌅晨起体重：${dayData.wMorning||"无记录"} kg｜🌙晚间体重：${dayData.wNight||"无记录"} kg</span>`;
+  html += `<span class="tip">早：${dayData.wMorning||"无记录"} kg｜晚：${dayData.wNight||"无记录"} kg</span>`;
 
   dayData.items.forEach((it,idx)=>{
     html += `
