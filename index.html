@@ -15,18 +15,20 @@ h1{text-align:center;font-size:24px;margin:8px 0 20px;}
 input,select,textarea{width:100%;padding:10px;border:1px solid #e2c8da;border-radius:10px;margin:8px 0;font-size:16px;}
 button{padding:10px 14px;border:none;border-radius:10px;background:#ff88bb;color:white;font-size:16px;cursor:pointer;margin:4px 2px;}
 button.gray{background:#aaa;}
-button.del{background:#ff5577;font-size:13px;padding:4px 8px;}
+button.trash{background:transparent;color:#ff4466;font-size:22px;padding:2px 6px;border:none;}
 .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0;}
 .cal-day{border-radius:10px;padding:6px 2px;text-align:center;font-size:13px;cursor:pointer;}
 .cal-empty{background:#ffe6f2;}
 .cal-low{background:#d9edf7;}
 .cal-good{background:#d4edda;}
 .cal-over{background:#ffe6cc;}
+.cal-selected{outline:3px solid #ff88bb;}
 .detail-item{padding:10px;background:#fff0f7;border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;align-items:flex-start;}
 .detail-content{flex:1;}
 img.preview{max-width:220px;border-radius:8px;margin:6px 0;}
 .legend{text-align:center;font-size:13px;margin:8px 0;}
 .backup-row{display:flex;gap:8px;flex-wrap:wrap;}
+.selected-date-tip{background:#ffeef6;padding:8px;border-radius:8px;margin:8px 0;color:#c83366;}
 </style>
 </head>
 <body>
@@ -39,14 +41,15 @@ img.preview{max-width:220px;border-radius:8px;margin:6px 0;}
 </div>
 
 <div class="card">
-<h3>📝 添加饮食记录 📷相册选图存档</h3>
+<h3>📝 添加/补录饮食记录 📷相册选图存档</h3>
+<div class="selected-date-tip">当前录入日期：<span id="targetDateText">今天</span></div>
 <select id="mealSel">
   <option value="breakfast">🌞早餐</option>
   <option value="lunch">☀️午餐</option>
   <option value="dinner">🌙晚餐</option>
   <option value="snack">🍬加餐/零食</option>
 </select>
-<input id="foodInput" placeholder="手动输入食物，例：鸡蛋1个，白米饭小半碗">
+<input id="foodInput" placeholder="多个食物用逗号隔开，例：鸡蛋1个，白米饭小半碗，黄瓜">
 <input id="weightInput" placeholder="补充分量描述（可选）">
 <input type="file" id="imgUpload" accept="image/*">
 <div id="imgPreview"></div>
@@ -65,42 +68,47 @@ img.preview{max-width:220px;border-radius:8px;margin:6px 0;}
 </div>
 
 <div class="card">
-<h3>📅 整月日历视图</h3>
+<h3>📅 整月日历视图（点击日期可补录）</h3>
 <div class="legend">🟢正常800-1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录</div>
 <input type="month" id="monthSel">
 <div class="calendar-grid" id="calendarBox"></div>
 </div>
 
 <div class="card">
-<h3>🔎查看单日明细（可单条删除）</h3>
+<h3>🔎查看单日明细（🗑️单条删除）</h3>
 <select id="daySelect"></select>
 <div id="detailBox"></div>
 </div>
 
 <script>
-// 内置食物库（适配多囊减脂）
+// 【扩充多囊减脂食物库】
 const foodMeta = [
   {"kw":["鸡蛋"],"illust":"🍳","kcal":70,"pro":6,"cho":0.6,"fat":5},
   {"kw":["烧麦"],"illust":"🥟","kcal":100,"pro":3,"cho":16,"fat":3},
+  {"kw":["小笼包"],"illust":"🥟","kcal":90,"pro":3,"cho":12,"fat":4},
   {"kw":["香肠"],"illust":"🌭","kcal":80,"pro":5,"cho":1,"fat":6},
   {"kw":["牛奶"],"illust":"🥛","kcal":120,"pro":6,"cho":9,"fat":5},
+  {"kw":["豆浆"],"illust":"🥤","kcal":40,"pro":3,"cho":5,"fat":1},
   {"kw":["咖啡"],"illust":"☕","kcal":5,"pro":0,"cho":0,"fat":0},
   {"kw":["米饭","白米饭"],"illust":"🍚","kcal":116,"pro":2.6,"cho":26,"fat":0.3},
   {"kw":["藜麦"],"illust":"🌾","kcal":120,"pro":4.4,"cho":21,"fat":1.9},
-  {"kw":["鸡胸"],"illust":"🍗","kcal":110,"pro":23,"cho":0,"fat":2},
+  {"kw":["荞麦面"],"illust":"🍜","kcal":130,"pro":5,"cho":24,"fat":0.8},
+  {"kw":["鸡胸","鸡胸肉"],"illust":"🍗","kcal":110,"pro":23,"cho":0,"fat":2},
   {"kw":["豆腐"],"illust":"🧈","kcal":85,"pro":8,"cho":3,"fat":5},
   {"kw":["鱼","鱼虾"],"illust":"🐟","kcal":100,"pro":18,"cho":0,"fat":3},
-  {"kw":["番茄","黄瓜"],"illust":"🥒","kcal":20,"pro":1,"cho":4,"fat":0.2},
-  {"kw":["小笼包"],"illust":"🥟","kcal":90,"pro":3,"cho":12,"fat":4},
+  {"kw":["番茄"],"illust":"🍅","kcal":20,"pro":1,"cho":4,"fat":0.2},
+  {"kw":["黄瓜"],"illust":"🥒","kcal":16,"pro":0.8,"cho":3,"fat":0.2},
+  {"kw":["青菜","菠菜","生菜"],"illust":"🥬","kcal":25,"pro":2,"cho":4,"fat":0.3},
   {"kw":["奶茶","拿铁"],"illust":"🧋","kcal":130,"pro":3,"cho":15,"fat":5},
   {"kw":["坚果"],"illust":"🌰","kcal":60,"pro":2,"cho":2,"fat":5},
   {"kw":["酸奶"],"illust":"🍨","kcal":70,"pro":4,"cho":8,"fat":2},
   {"kw":["面包"],"illust":"🍞","kcal":140,"pro":4,"cho":24,"fat":3},
-  {"kw":["青菜","菠菜","蔬菜"],"illust":"🥬","kcal":25,"pro":2,"cho":4,"fat":0.3},
 ];
 const DAILY_TARGET = 1000;
 let records = JSON.parse(localStorage.getItem("dietRecords")) || {};
 let selectedImgData = null;
+// 选中用于补录的日期，默认今天
+let targetAddDate = new Date().toISOString().slice(0,10);
 
 // 初始化
 const now = new Date();
@@ -119,19 +127,22 @@ document.getElementById("imgUpload").onchange = function(e){
   reader.readAsDataURL(file);
 }
 
-// 解析食物文字
+// 【优化：支持逗号分隔多个食物，分别识别累加热量】
 function parseFood(text){
-  const textLow = text.toLowerCase();
+  const foodList = text.split(/[,，]/).map(item=>item.trim().toLowerCase());
   const out = {illust:"🍽️",kcal:0,pro:0,cho:0,fat:0};
-  for(const f of foodMeta){
-    for(const kw of f.kw){
-      if(textLow.includes(kw)){
-        out.kcal += f.kcal;
-        out.pro += f.pro;
-        out.cho += f.cho;
-        out.fat += f.fat;
-        out.illust = f.illust;
-        break;
+  for(const foodStr of foodList){
+    if(!foodStr) continue;
+    for(const f of foodMeta){
+      for(const kw of f.kw){
+        if(foodStr.includes(kw)){
+          out.kcal += f.kcal;
+          out.pro += f.pro;
+          out.cho += f.cho;
+          out.fat += f.fat;
+          out.illust = f.illust;
+          break;
+        }
       }
     }
   }
@@ -150,16 +161,16 @@ function save(){
   localStorage.setItem("dietRecords",JSON.stringify(records));
 }
 
-// 添加记录
+// 添加记录（写入targetAddDate，支持补录历史日期）
 function addRecord(){
   const foodText = document.getElementById("foodInput").value.trim();
   const weight = document.getElementById("weightInput").value.trim();
   const meal = document.getElementById("mealSel").value;
   if(!foodText){alert("请输入食物名称");return;}
   const nutr = parseFood(foodText);
-  const today = new Date().toISOString().slice(0,10);
-  if(!records[today]) records[today] = {items:[]};
-  records[today].items.push({meal,foodText,weight,photo:selectedImgData,...nutr});
+  const dayStr = targetAddDate;
+  if(!records[dayStr]) records[dayStr] = {items:[]};
+  records[dayStr].items.push({meal,foodText,weight,photo:selectedImgData,...nutr});
   save();
   //清空输入
   document.getElementById("foodInput").value="";
@@ -171,7 +182,7 @@ function addRecord(){
   alert("✅记录添加成功");
 }
 
-// 删除【单条】记录
+// 删除【单条】记录，垃圾桶按钮
 function deleteItem(dayStr, index){
   if(!confirm("确定删除这条记录吗？")) return;
   records[dayStr].items.splice(index,1);
@@ -199,9 +210,16 @@ function getCalClass(kcal){
   return "cal-over";
 }
 
+// 点击日历日期：选中日期，设置为补录目标日期
+function selectDayForAdd(dayStr){
+  targetAddDate = dayStr;
+  document.getElementById("targetDateText").innerText = dayStr;
+  renderAll();
+}
+
 //渲染全部页面
 function renderAll(){
-  //更新热量缺口
+  //更新热量缺口（只看今天）
   const today = new Date().toISOString().slice(0,10);
   const todayItems = records[today]?.items || [];
   const sumToday = calcDay(todayItems);
@@ -211,7 +229,6 @@ function renderAll(){
   //渲染日历
   const monthVal = document.getElementById("monthSel").value;
   const [y,m] = monthVal.split("-").map(Number);
-  const firstDay = new Date(y,m-1,1);
   const lastDay = new Date(y,m,0).getDate();
   let calHtml = "";
   for(let d=1;d<=lastDay;d++){
@@ -219,7 +236,9 @@ function renderAll(){
     const items = records[dayStr]?.items || [];
     const s = calcDay(items);
     const cls = getCalClass(s.kcal);
-    calHtml += `<div class="cal-day ${cls}" onclick="selectDay('${dayStr}')">${d}号<br/>${s.kcal}kcal</div>`;
+    //选中的日期加外框高亮
+    const selectedCls = dayStr === targetAddDate ? "cal-selected" : "";
+    calHtml += `<div class="cal-day ${cls} ${selectedCls}" onclick="selectDayForAdd('${dayStr}')">${d}号<br/>${s.kcal}kcal</div>`;
   }
   document.getElementById("calendarBox").innerHTML = calHtml;
 
@@ -233,13 +252,7 @@ function renderAll(){
   showDetail(document.getElementById("daySelect").value);
 }
 
-//选择日期
-function selectDay(dayStr){
-  document.getElementById("daySelect").value = dayStr;
-  showDetail(dayStr);
-}
-
-//展示单日明细（增加单条删除按钮）
+//展示单日明细（垃圾桶🗑️图标删除单条）
 function showDetail(dayStr){
   const items = records[dayStr]?.items || [];
   const box = document.getElementById("detailBox");
@@ -258,7 +271,7 @@ function showDetail(dayStr){
     ${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g
     ${it.photo ? `<br><img class="preview" src="${it.photo}">` : ""}
     </div>
-    <button class="del" onclick="deleteItem('${dayStr}',${idx})">删除</button>
+    <button class="trash" onclick="deleteItem('${dayStr}',${idx})">🗑️</button>
     </div>`;
   }
   box.innerHTML = html;
