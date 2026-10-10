@@ -68,15 +68,14 @@ img.preview{max-width:220px;border-radius:8px;margin:6px 0;}
 </div>
 
 <div class="card">
-<h3>📅 整月日历视图（点击日期可补录）</h3>
+<h3>📅 整月日历视图（点击日期，下方直接显示当日明细，同时支持补录）</h3>
 <div class="legend">🟢正常800-1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录</div>
 <input type="month" id="monthSel">
 <div class="calendar-grid" id="calendarBox"></div>
 </div>
 
 <div class="card">
-<h3>🔎查看单日明细（🗑️单条删除）</h3>
-<select id="daySelect"></select>
+<h3>🔎当日明细（🗑️单条删除）</h3>
 <div id="detailBox"></div>
 </div>
 
@@ -107,8 +106,8 @@ const foodMeta = [
 const DAILY_TARGET = 1000;
 let records = JSON.parse(localStorage.getItem("dietRecords")) || {};
 let selectedImgData = null;
-// 选中用于补录的日期，默认今天
-let targetAddDate = new Date().toISOString().slice(0,10);
+// 选中用于补录+查看明细的日期，默认今天
+let targetDate = new Date().toISOString().slice(0,10);
 
 // 初始化
 const now = new Date();
@@ -161,14 +160,14 @@ function save(){
   localStorage.setItem("dietRecords",JSON.stringify(records));
 }
 
-// 添加记录（写入targetAddDate，支持补录历史日期）
+// 添加记录（写入targetDate，支持补录历史日期）
 function addRecord(){
   const foodText = document.getElementById("foodInput").value.trim();
   const weight = document.getElementById("weightInput").value.trim();
   const meal = document.getElementById("mealSel").value;
   if(!foodText){alert("请输入食物名称");return;}
   const nutr = parseFood(foodText);
-  const dayStr = targetAddDate;
+  const dayStr = targetDate;
   if(!records[dayStr]) records[dayStr] = {items:[]};
   records[dayStr].items.push({meal,foodText,weight,photo:selectedImgData,...nutr});
   save();
@@ -210,10 +209,11 @@ function getCalClass(kcal){
   return "cal-over";
 }
 
-// 点击日历日期：选中日期，设置为补录目标日期
-function selectDayForAdd(dayStr){
-  targetAddDate = dayStr;
+// 🔥核心：点击日历日期，同时【设置补录日期 + 直接刷新下方明细】
+function selectDay(dayStr){
+  targetDate = dayStr;
   document.getElementById("targetDateText").innerText = dayStr;
+  showDetail(dayStr);
   renderAll();
 }
 
@@ -237,19 +237,12 @@ function renderAll(){
     const s = calcDay(items);
     const cls = getCalClass(s.kcal);
     //选中的日期加外框高亮
-    const selectedCls = dayStr === targetAddDate ? "cal-selected" : "";
-    calHtml += `<div class="cal-day ${cls} ${selectedCls}" onclick="selectDayForAdd('${dayStr}')">${d}号<br/>${s.kcal}kcal</div>`;
+    const selectedCls = dayStr === targetDate ? "cal-selected" : "";
+    calHtml += `<div class="cal-day ${cls} ${selectedCls}" onclick="selectDay('${dayStr}')">${d}号<br/>${s.kcal}kcal</div>`;
   }
   document.getElementById("calendarBox").innerHTML = calHtml;
-
-  //日期下拉框
-  let optHtml = "";
-  for(let d=1;d<=lastDay;d++){
-    const dayStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    optHtml += `<option value="${dayStr}">${dayStr}</option>`;
-  }
-  document.getElementById("daySelect").innerHTML = optHtml;
-  showDetail(document.getElementById("daySelect").value);
+  // 每次渲染日历，自动刷新明细区域
+  showDetail(targetDate);
 }
 
 //展示单日明细（垃圾桶🗑️图标删除单条）
@@ -279,7 +272,6 @@ function showDetail(dayStr){
 
 //月份切换监听
 document.getElementById("monthSel").onchange = renderAll;
-document.getElementById("daySelect").onchange = function(){showDetail(this.value);}
 
 // ===== 导出导入备份 =====
 function exportData(){
