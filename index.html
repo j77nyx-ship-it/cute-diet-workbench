@@ -49,7 +49,6 @@ button:hover{background:#ff66aa;}
 .tip{font-size:13px;color:#995577;}
 .photo-area{margin-top:12px;}
 .photo-img{max-width:120px;border-radius:8px;margin:4px;cursor:pointer;}
-/* 图片放大弹窗 */
 .modal{
   display:none;
   position:fixed;
@@ -62,7 +61,6 @@ button:hover{background:#ff66aa;}
 .modal img{max-width:90%;max-height:90%;border-radius:8px;}
 .modal.show{display:flex;}
 
-/* 日历样式 */
 .calendar-grid{
   display:grid;
   grid-template-columns: repeat(7, 1fr);
@@ -154,7 +152,6 @@ button:hover{background:#ff66aa;}
     <input style="flex:1" id="fatInput" placeholder="脂肪 g">
   </div>
 
-  <!-- 图片上传，从相册选择，无AI分析 -->
   <div class="photo-area">
     <button onclick="document.getElementById('uploadPhoto').click()">🖼上传餐食照片</button>
     <input type="file" id="uploadPhoto" accept="image/*" onchange="handlePhoto(event)" style="display:none;">
@@ -169,7 +166,6 @@ button:hover{background:#ff66aa;}
   <div class="tip">✅使用方法：复制【食物｜热量｜蛋白｜碳水｜脂肪】粘贴到上方食物框，自动填入营养，数值可手动修改。每条记录支持单独删除，可上传餐食照片，回看时有缩略图。</div>
 </div>
 
-<!-- AI建议模块 -->
 <div class="card">
   <h3>🤖饮食AI助手</h3>
   <div class="tip">点击【复制今日记录】，把文本发给豆包，拿到建议再粘贴回来</div>
@@ -197,14 +193,13 @@ button:hover{background:#ff66aa;}
   <div class="day-detail" id="dayDetailBox"></div>
 </div>
 
-<!-- 图片放大弹窗 -->
 <div class="modal" id="imgModal" onclick="closeModal()">
   <img id="modalImg">
 </div>
 
 <script>
 let capturedImageBase64 = "";
-// 自动解析 食物｜热量｜蛋白｜碳水｜脂肪
+
 function autoFillNutrition(){
   const text = document.getElementById("foodInput").value.trim();
   if(!text.includes("｜")) return;
@@ -217,7 +212,6 @@ function autoFillNutrition(){
   }
 }
 
-// 本地存储
 function getAllRecords(){
   let raw = localStorage.getItem("dietLog");
   return raw ? JSON.parse(raw) : {};
@@ -226,7 +220,6 @@ function saveAllRecords(obj){
   localStorage.setItem("dietLog",JSON.stringify(obj));
 }
 
-// 获取当日日期 yyyy-mm-dd
 function getTodayStr(){
   const d = new Date();
   const y = d.getFullYear();
@@ -235,7 +228,6 @@ function getTodayStr(){
   return `${y}-${m}-${day}`;
 }
 
-// 上传图片
 function handlePhoto(e){
   const file = e.target.files[0];
   if(!file) return;
@@ -247,7 +239,6 @@ function handlePhoto(e){
   reader.readAsDataURL(file);
 }
 
-// 图片弹窗
 function openModal(src){
   document.getElementById("modalImg").src = src;
   document.getElementById("imgModal").classList.add("show");
@@ -256,7 +247,6 @@ function closeModal(){
   document.getElementById("imgModal").classList.remove("show");
 }
 
-// 添加记录
 function addFoodRecord(){
   const foodText = document.getElementById("foodInput").value.trim();
   const kcal = Number(document.getElementById("kcalInput").value)||0;
@@ -269,7 +259,13 @@ function addFoodRecord(){
 
   const dayKey = getTodayStr();
   const all = getAllRecords();
-  if(!all[dayKey]) all[dayKey] = {items:[],advice:""};
+  // 修复：强制保证items一定是数组，旧脏数据会在这里修复
+  if(!all[dayKey]) {
+    all[dayKey] = {items:[],advice:""};
+  }
+  if(!Array.isArray(all[dayKey].items)){
+    all[dayKey].items = [];
+  }
 
   all[dayKey].items.push({
     meal:mealSel,
@@ -282,7 +278,7 @@ function addFoodRecord(){
     ts:Date.now()
   });
   saveAllRecords(all);
-  //清空输入框
+
   document.getElementById("foodInput").value="";
   document.getElementById("kcalInput").value="";
   document.getElementById("proInput").value="";
@@ -294,11 +290,12 @@ function addFoodRecord(){
   alert("✅已保存这条记录");
 }
 
-// 删除单条记录
 function deleteItem(dayStr, tsIndex){
   const all = getAllRecords();
-  all[dayStr].items.splice(tsIndex,1);
-  saveAllRecords(all);
+  if(all[dayStr] && Array.isArray(all[dayStr].items)){
+    all[dayStr].items.splice(tsIndex,1);
+    saveAllRecords(all);
+  }
   renderMonth();
   showDayDetail(dayStr);
 }
@@ -311,9 +308,8 @@ function clearToday(){
   renderMonth();
 }
 
-// 计算一天总热量总蛋白
 function getDayTotal(dayData){
-  if(!dayData || !dayData.items) return {kcal:0, pro:0};
+  if(!dayData || !Array.isArray(dayData.items)) return {kcal:0, pro:0};
   let kcal=0,pro=0;
   dayData.items.forEach(i=>{
     kcal += i.kcal;
@@ -322,7 +318,6 @@ function getDayTotal(dayData){
   return {kcal,pro};
 }
 
-// 获取日历格子对应的css class
 function getCalClass(kcal){
   if(kcal === 0) return "cal-empty";
   if(kcal < 800) return "cal-low";
@@ -330,7 +325,6 @@ function getCalClass(kcal){
   return "cal-over";
 }
 
-// 渲染日历
 function renderMonth(){
   const picker = document.getElementById("monthPicker");
   if(!picker.value){
@@ -365,12 +359,11 @@ function renderMonth(){
   document.getElementById("aiSuggestInput").value = (todayData?.advice)||"";
 }
 
-//复制今日全部记录文本
 function copyTodayLog(){
   const dayKey = getTodayStr();
   const allRecords = getAllRecords();
   const dayData = allRecords[dayKey];
-  if(!dayData || !dayData.items.length){
+  if(!dayData || !Array.isArray(dayData.items) || dayData.items.length===0){
     alert("今日还没有记录");
     return;
   }
@@ -386,7 +379,6 @@ function copyTodayLog(){
   })
 }
 
-//保存AI给的建议
 function saveAiAdvice(){
   const text = document.getElementById("aiSuggestInput").value.trim();
   const dayKey = getTodayStr();
@@ -398,7 +390,6 @@ function saveAiAdvice(){
   alert("✅AI建议保存成功");
 }
 
-//导出备份json
 function exportJson(){
   const all = getAllRecords();
   const blob = new Blob([JSON.stringify(all,null,2)],{type:"application/json"});
@@ -410,12 +401,11 @@ function exportJson(){
   URL.revokeObjectURL(url);
 }
 
-// 点击日期，展开当日明细，显示缩略图
 function showDayDetail(dayStr){
   const allRecords = getAllRecords();
   const dayData = allRecords[dayStr];
   const detailBox = document.getElementById("dayDetailBox");
-  if(!dayData || !dayData.items || dayData.items.length===0){
+  if(!dayData || !Array.isArray(dayData.items) || dayData.items.length===0){
     detailBox.innerHTML = `<strong>${dayStr}</strong><br/>📭今日暂无饮食记录`;
     detailBox.style.display = "block";
     return;
@@ -441,7 +431,6 @@ function showDayDetail(dayStr){
   detailBox.style.display = "block";
 }
 
-//初始化
 document.getElementById("monthPicker").addEventListener("change",renderMonth);
 renderMonth();
 </script>
