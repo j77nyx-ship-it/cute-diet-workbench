@@ -8,7 +8,7 @@
 *{box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
 body{
   background:#fff7fb;
-  max-width:720px;
+  max-width:760px;
   margin:20px auto;
   padding:14px;
   color:#443344;
@@ -42,11 +42,34 @@ button{
 }
 button:hover{background:#ff66aa;}
 .month-selector{text-align:center;margin:12px 0;}
-.day-item{
+.tip{font-size:13px;color:#995577;}
+.photo-area{margin-top:12px;}
+#cameraPreview{max-width:100%;border-radius:14px;display:none;}
+.photo-img{max-width:120px;border-radius:8px;margin:4px;}
+
+/* 日历样式 */
+.calendar-grid{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:8px;
+  margin-top:12px;
+}
+.calendar-day{
+  background:#ffe6f2;
+  border-radius:12px;
+  padding:8px 4px;
+  text-align:center;
+  cursor:pointer;
+  font-size:13px;
+}
+.calendar-day:hover{background:#ffc8e0;}
+.calendar-day.active{border:2px solid #ff66aa;}
+.day-detail{
+  margin-top:14px;
+  padding:14px;
   background:#fff0f7;
   border-radius:16px;
-  padding:14px;
-  margin:10px 0;
+  display:none;
 }
 .meal-item{
   display:flex;
@@ -69,10 +92,6 @@ button:hover{background:#ff66aa;}
   padding:8px 4px;
   font-size:13px;
 }
-.tip{font-size:13px;color:#995577;}
-.photo-area{margin-top:12px;}
-#cameraPreview{max-width:100%;border-radius:14px;display:none;}
-.photo-img{max-width:120px;border-radius:8px;margin:4px;}
 </style>
 </head>
 <body>
@@ -83,7 +102,7 @@ button:hover{background:#ff66aa;}
     <div>三餐目标<br/>800‑1000 kcal</div>
     <div>零食上限<br/>150 kcal</div>
     <div>蛋白最低<br/>70g/天</div>
-    <div>多囊小记✨</div>
+    <div>热量缺口<br/>-- kcal</div>
   </div>
 
   <div class="row">
@@ -101,8 +120,6 @@ button:hover{background:#ff66aa;}
   <div class="photo-area">
     <button onclick="openCamera()">📸拍照打卡</button>
     <input type="file" id="uploadPhoto" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
-    <video id="cameraPreview" autoplay playsinline></video>
-    <button id="takePhotoBtn" onclick="capturePhoto()" style="display:none;">拍摄保存</button>
   </div>
 
   <div class="row" style="margin-top:10px;">
@@ -113,11 +130,13 @@ button:hover{background:#ff66aa;}
 </div>
 
 <div class="card month-selector">
-  <label>📅选择月份查看历史：</label>
+  <label>📅选择月份查看：</label>
   <input type="month" id="monthPicker"/>
+  <!-- 日历区域，整月每日热量一览 -->
+  <div class="calendar-grid" id="calendarBox"></div>
+  <!-- 选中日期的明细，点击日期才显示 -->
+  <div class="day-detail" id="dayDetailBox"></div>
 </div>
-
-<div id="historyContainer"></div>
 
 <script>
 // 食物营养库
@@ -181,7 +200,6 @@ function getTodayStr(){
 }
 
 // 拍照相关
-let cameraStream = null;
 let capturedImageBase64 = "";
 function openCamera(){
   const input = document.getElementById("uploadPhoto");
@@ -231,63 +249,75 @@ function clearToday(){
   renderMonth();
 }
 
-//渲染页面
+// 计算一天总热量
+function getDayTotal(dayData){
+  if(!dayData || !dayData.items) return {kcal:0, pro:0};
+  let kcal=0,pro=0;
+  dayData.items.forEach(i=>{
+    kcal += i.kcal;
+    pro += i.pro;
+  })
+  return {kcal,pro};
+}
+
+// 渲染日历（整月所有天数，一眼看每日热量）
 function renderMonth(){
   const picker = document.getElementById("monthPicker");
   if(!picker.value){
     const now = new Date();
     picker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   }
-  const selMonth = picker.value;
-  const container = document.getElementById("historyContainer");
-  const all = getAllRecords();
-  let html="";
-  //筛选当月记录
-  const dayList = Object.keys(all).filter(k=>k.startsWith(selMonth)).sort();
-  if(dayList.length===0){
-    container.innerHTML = `<div class="card"><div style="text-align:center;">📭本月暂无饮食记录</div></div>`;
+  const [year,month] = picker.value.split("-").map(Number);
+  const allRecords = getAllRecords();
+  const calendarBox = document.getElementById("calendarBox");
+  const detailBox = document.getElementById("dayDetailBox");
+  detailBox.style.display = "none";
+
+  // 获取当月总天数
+  const daysInMonth = new Date(year, month, 0).getDate();
+  let calHtml = "";
+  for(let d=1;d<=daysInMonth;d++){
+    const dayStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const dayData = allRecords[dayStr];
+    const dayTotal = getDayTotal(dayData);
+    calHtml += `<div class="calendar-day" onclick="showDayDetail('${dayStr}')">
+      ${d}号<br/>${dayTotal.kcal}kcal
+    </div>`
+  }
+  calendarBox.innerHTML = calHtml;
+
+  // 更新顶部【热量缺口】（目标取1000kcal为每日摄入目标计算缺口）
+  const todayTotal = getDayTotal(allRecords[getTodayStr()]);
+  const deficit = 1000 - todayTotal.kcal;
+  document.querySelector(".stat>div:nth-child(4)").innerHTML = `热量缺口<br/>${deficit} kcal`;
+}
+
+// 点击日期，展开当日明细
+function showDayDetail(dayStr){
+  const allRecords = getAllRecords();
+  const dayData = allRecords[dayStr];
+  const detailBox = document.getElementById("dayDetailBox");
+  if(!dayData || !dayData.items || dayData.items.length===0){
+    detailBox.innerHTML = `<strong>${dayStr}</strong><br/>📭今日暂无饮食记录`;
+    detailBox.style.display = "block";
     return;
   }
-  for(const day of dayList){
-    const dayData = all[day];
-    const items = dayData.items || [];
-    //区分三餐和零食
-    const threeMealItems = items.filter(x=>x.meal !== "snack");
-    const snackItems = items.filter(x=>x.meal === "snack");
-    const sum3 = threeMealItems.reduce((s,i)=>({
-      kcal:s.kcal+i.kcal,pro:s.pro+i.pro,cho:s.cho+i.cho,fat:s.fat+i.fat
-    }),{kcal:0,pro:0,cho:0,fat:0});
-    const sumSnack = snackItems.reduce((s,i)=>({
-      kcal:s.kcal+i.kcal,pro:s.pro+i.pro,cho:s.cho+i.cho,fat:s.fat+i.fat
-    }),{kcal:0,pro:0,cho:0,fat:0});
-    const totalAll = {
-      kcal:sum3.kcal + sumSnack.kcal,
-      pro:sum3.pro + sumSnack.pro
-    };
-    // 转换meal文字
-    const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
-    html += `<div class="day-item">
-      <div><strong>📆${day}</strong></div>
-      <div class="stat">
-        <div>三餐：${sum3.kcal} kcal<br/><span class="tip">目标800‑1000</span></div>
-        <div>零食：${sumSnack.kcal} kcal<br/><span class="tip">上限150</span></div>
-        <div>全天：${totalAll.kcal} kcal</div>
-        <div>蛋白：${totalAll.pro.toFixed(1)}g</div>
-      </div>`;
-    for(const it of items){
-      html += `
-      <div class="meal-item">
-        <div class="food-illust">${it.illust}</div>
-        <div>
-          <div>${mealMap[it.meal]}｜${it.foodText}</div>
-          <div class="tip">${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
-          ${it.photo ? `<img class="photo-img" src="${it.photo}">` : ""}
-        </div>
-      </div>`;
-    }
-    html += `</div>`;
-  }
-  container.innerHTML = html;
+  const dayTotal = getDayTotal(dayData);
+  const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
+  let html = `<strong>📆${dayStr}</strong>  总热量：${dayTotal.kcal} kcal｜蛋白${dayTotal.pro.toFixed(1)}g`;
+  dayData.items.forEach(it=>{
+    html += `
+    <div class="meal-item">
+      <div class="food-illust">${it.illust}</div>
+      <div>
+        <div>${mealMap[it.meal]}｜${it.foodText}</div>
+        <div class="tip">${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
+        ${it.photo ? `<img class="photo-img" src="${it.photo}">` : ""}
+      </div>
+    </div>`
+  })
+  detailBox.innerHTML = html;
+  detailBox.style.display = "block";
 }
 
 //初始化
