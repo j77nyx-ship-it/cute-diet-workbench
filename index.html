@@ -130,7 +130,7 @@ button:hover{background:#ff66aa;}
       <option value="dinner">🌙晚餐</option>
       <option value="snack">🍬加餐/零食</option>
     </select>
-    <input id="foodInput" placeholder="食物名称：例：白米饭100g +茭白炒瘦猪肉172g"/>
+    <input id="foodInput" placeholder="粘贴格式：食物名称｜热量｜蛋白｜碳水｜脂肪" oninput="autoFillNutrition()">
   </div>
   <div class="row">
     <input style="flex:1" id="kcalInput" placeholder="热量 kcal">
@@ -147,11 +147,11 @@ button:hover{background:#ff66aa;}
   </div>
 
   <div class="row" style="margin-top:10px;">
-    <button onclick="addFoodRecord()">➕手动添加记录</button>
+    <button onclick="addFoodRecord()">➕添加记录</button>
     <button onclick="clearToday()">🗑清空今日</button>
     <button onclick="exportJson()">💾导出备份</button>
   </div>
-  <div class="tip">说明：热量营养手动填入；拍好照片，发给AI帮你算，结果粘贴保存。</div>
+  <div class="tip">✅使用方法：复制【食物｜热量｜蛋白｜碳水｜脂肪】粘贴到上方食物框，自动填入营养，数值不对可手动修改</div>
 </div>
 
 <!-- AI建议模块 -->
@@ -185,6 +185,19 @@ button:hover{background:#ff66aa;}
 </div>
 
 <script>
+// 自动解析 食物｜热量｜蛋白｜碳水｜脂肪
+function autoFillNutrition(){
+  const text = document.getElementById("foodInput").value.trim();
+  if(!text.includes("｜")) return;
+  const parts = text.split("｜");
+  if(parts.length >=5){
+    document.getElementById("kcalInput").value = parts[1].trim();
+    document.getElementById("proInput").value = parts[2].trim();
+    document.getElementById("choInput").value = parts[3].trim();
+    document.getElementById("fatInput").value = parts[4].trim();
+  }
+}
+
 // 本地存储
 function getAllRecords(){
   let raw = localStorage.getItem("dietLog");
@@ -219,7 +232,7 @@ function handlePhoto(e){
   reader.readAsDataURL(file);
 }
 
-// 添加记录【全部手动填写，不再自动解析食物库】
+// 添加记录
 function addFoodRecord(){
   const foodText = document.getElementById("foodInput").value.trim();
   const kcal = Number(document.getElementById("kcalInput").value)||0;
@@ -256,7 +269,7 @@ function addFoodRecord(){
   document.getElementById("weightHint").value="";
   capturedImageBase64="";
   renderMonth();
-  alert("已保存这条记录");
+  alert("✅已保存这条记录");
 }
 
 function clearToday(){
@@ -336,7 +349,7 @@ function copyTodayLog(){
   const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
   let outputText = `【${dayKey} 饮食记录，多囊减脂，请帮我点评+给建议】\n`;
   dayData.items.forEach(it=>{
-    outputText += `${mealMap[it.meal]}：${it.foodText}｜${it.weight||""}\n热量：${it.kcal}kcal，蛋白${it.pro}g，碳水${it.cho}g，脂肪${it.fat}g\n`;
+    outputText += `${mealMap[it.meal]}：${it.foodText}\n热量：${it.kcal}kcal，蛋白${it.pro}g，碳水${it.cho}g，脂肪${it.fat}g\n`;
   })
   const total = getDayTotal(dayData);
   outputText += `\n👉今日合计：总热量${total.kcal} kcal，总蛋白${total.pro} g\n`;
