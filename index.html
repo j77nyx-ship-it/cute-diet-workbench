@@ -1,345 +1,303 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍡减脂饮食小工作台</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💄减脂饮食小工作台</title>
 <style>
-*{box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
-body{
-  background:#fff7fb;
-  max-width:760px;
-  margin:20px auto;
-  padding:14px;
-  color:#443344;
-}
-.card{
-  background:#ffffff;
-  border-radius:22px;
-  padding:20px;
-  margin-bottom:16px;
-  box-shadow:0 3px 10px #ffd6e888;
-  border:2px solid #ffe6f2;
-}
-h1{text-align:center;color:#dd6699;font-size:24px;}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;align-items:center;}
-select,input,textarea{
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid #ffbcd9;
-  font-size:15px;
-  flex:1;
-  min-width:110px;
-}
-button{
-  background:#ff88bb;
-  color:white;
-  border:none;
-  padding:10px 16px;
-  border-radius:14px;
-  font-weight:bold;
-  cursor:pointer;
-}
-button:hover{background:#ff66aa;}
-.month-selector{text-align:center;margin:12px 0;}
-.tip{font-size:13px;color:#995577;}
-.photo-area{margin-top:12px;}
-#cameraPreview{max-width:100%;border-radius:14px;display:none;}
-.photo-img{max-width:120px;border-radius:8px;margin:4px;}
-
-/* 日历样式 */
-.calendar-grid{
-  display:grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap:8px;
-  margin-top:12px;
-}
-.calendar-day{
-  border-radius:12px;
-  padding:8px 4px;
-  text-align:center;
-  cursor:pointer;
-  font-size:13px;
-}
-.calendar-day:hover{filter:brightness(0.95);}
-.calendar-day.active{border:2px solid #ff66aa;}
-/* 日历颜色分类 */
+*{box-sizing:border-box;font-family:system-ui, sans-serif;}
+body{background:#fff7fb;padding:16px;max-width:800px;margin:0 auto;color:#333;}
+.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #00000010;border:1px solid #f8ddea;}
+h1{text-align:center;font-size:24px;margin:8px 0 20px;}
+.row4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.metric{background:#ffe6f2;border-radius:12px;padding:10px;text-align:center;}
+.metric strong{font-size:18px;display:block;}
+input,select,textarea{width:100%;padding:10px;border:1px solid #e2c8da;border-radius:10px;margin:8px 0;font-size:16px;}
+button{padding:10px 14px;border:none;border-radius:10px;background:#ff88bb;color:white;font-size:16px;cursor:pointer;margin:4px 2px;}
+button.gray{background:#aaa;}
+button.del{background:#ff5577;font-size:13px;padding:4px 8px;}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0;}
+.cal-day{border-radius:10px;padding:6px 2px;text-align:center;font-size:13px;cursor:pointer;}
 .cal-empty{background:#ffe6f2;}
 .cal-low{background:#d9edf7;}
 .cal-good{background:#d4edda;}
 .cal-over{background:#ffe6cc;}
-
-.day-detail{
-  margin-top:14px;
-  padding:14px;
-  background:#fff0f7;
-  border-radius:16px;
-  display:none;
-}
-.meal-item{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  padding:8px 6px;
-  border-bottom:1px dashed #ffbbd8;
-}
-.food-illust{font-size:34px;}
-.stat{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
-  gap:8px;
-  margin:10px 0;
-}
-.stat>div{
-  background:#ffe6f2;
-  border-radius:12px;
-  text-align:center;
-  padding:8px 4px;
-  font-size:13px;
-}
+.detail-item{padding:10px;background:#fff0f7;border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;align-items:flex-start;}
+.detail-content{flex:1;}
+img.preview{max-width:220px;border-radius:8px;margin:6px 0;}
+.legend{text-align:center;font-size:13px;margin:8px 0;}
+.backup-row{display:flex;gap:8px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
 <h1>💄减脂饮食小工作台</h1>
-
-<div class="card">
-  <div class="stat">
-    <div>三餐目标<br/>800‑1000 kcal</div>
-    <div>零食上限<br/>150 kcal</div>
-    <div>蛋白最低<br/>70g/天</div>
-    <div>热量缺口<br/>-- kcal</div>
-  </div>
-
-  <div class="row">
-    <select id="mealType">
-      <option value="breakfast">🌞早餐</option>
-      <option value="lunch">☀️午餐</option>
-      <option value="dinner">🌙晚餐</option>
-      <option value="snack">🍬加餐/零食</option>
-    </select>
-    <input id="foodInput" placeholder="输入食物，例如：鸡蛋1个，白米饭小半碗"/>
-  </div>
-  <textarea id="weightHint" placeholder="补充分量描述（可选）" rows="2"></textarea>
-
-  <!-- 📸拍照打卡模块 -->
-  <div class="photo-area">
-    <button onclick="openCamera()">📸拍照打卡</button>
-    <input type="file" id="uploadPhoto" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
-  </div>
-
-  <div class="row" style="margin-top:10px;">
-    <button onclick="addFoodRecord()">➕添加记录（自动估算营养）</button>
-    <button onclick="clearToday()">🗑清空今日</button>
-  </div>
-  <div class="tip">说明：为估算值，供减脂参考，不作为医疗标准</div>
+<div class="row4">
+  <div class="metric"><span>三餐目标</span><strong>800‑1000 kcal</strong></div>
+  <div class="metric"><span>零食上限</span><strong>150 kcal</strong></div>
+  <div class="metric"><span>蛋白最低</span><strong>70g/天</strong></div>
+  <div class="metric"><span>热量缺口</span><strong id="deficit">-- kcal</strong></div>
 </div>
 
-<div class="card month-selector">
-  <label>📅选择月份查看：</label>
-  <input type="month" id="monthPicker"/>
-  <div style="font-size:13px;margin:6px 0;text-align:center;">
-    🟢正常800-1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录
-  </div>
-  <!-- 日历区域，整月每日热量一览 -->
-  <div class="calendar-grid" id="calendarBox"></div>
-  <!-- 选中日期的明细，点击日期才显示 -->
-  <div class="day-detail" id="dayDetailBox"></div>
+<div class="card">
+<h3>📝 添加饮食记录 📷相册选图存档</h3>
+<select id="mealSel">
+  <option value="breakfast">🌞早餐</option>
+  <option value="lunch">☀️午餐</option>
+  <option value="dinner">🌙晚餐</option>
+  <option value="snack">🍬加餐/零食</option>
+</select>
+<input id="foodInput" placeholder="手动输入食物，例：鸡蛋1个，白米饭小半碗">
+<input id="weightInput" placeholder="补充分量描述（可选）">
+<input type="file" id="imgUpload" accept="image/*">
+<div id="imgPreview"></div>
+<br>
+<button onclick="addRecord()">➕添加记录</button>
+<button class="gray" onclick="clearToday()">🗑清空今日全部记录</button>
+</div>
+
+<div class="card">
+<h3>💾 备份/恢复数据</h3>
+<div class="backup-row">
+<button onclick="exportData()">📤导出备份JSON</button>
+<button class="gray" onclick="document.getElementById('importFile').click()">📥导入备份</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+</div>
+
+<div class="card">
+<h3>📅 整月日历视图</h3>
+<div class="legend">🟢正常800-1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录</div>
+<input type="month" id="monthSel">
+<div class="calendar-grid" id="calendarBox"></div>
+</div>
+
+<div class="card">
+<h3>🔎查看单日明细（可单条删除）</h3>
+<select id="daySelect"></select>
+<div id="detailBox"></div>
 </div>
 
 <script>
-// 食物营养库
+// 内置食物库（适配多囊减脂）
 const foodMeta = [
-  {kw:["鸡蛋"],illust:"🍳",kcal:70,pro:6,cho:0.6,fat:5},
-  {kw:["烧麦"],illust:"🥟",kcal:100,pro:3,cho:16,fat:3},
-  {kw:["香肠"],illust:"🌭",kcal:80,pro:5,cho:1,fat:6},
-  {kw:["牛奶"],illust:"🥛",kcal:120,pro:6,cho:9,fat:5},
-  {kw:["咖啡"],illust:"☕",kcal:5,pro:0,cho:0,fat:0},
-  {kw:["米饭","白米饭"],illust:"🍚",kcal:116,pro:2.6,cho:26,fat:0.3},
-  {kw:["藜麦"],illust:"🌾",kcal:120,pro:4.4,cho:21,fat:1.9},
-  {kw:["鸡胸"],illust:"🍗",kcal:110,pro:23,cho:0,fat:2},
-  {kw:["豆腐"],illust:"🧈",kcal:85,pro:8,cho:3,fat:5},
-  {kw:["鱼","鱼虾"],illust:"🐟",kcal:100,pro:18,cho:0,fat:3},
-  {kw:["番茄","黄瓜"],illust:"🥒",kcal:20,pro:1,cho:4,fat:0.2},
-  {kw:["小笼包"],illust:"🥟",kcal:90,pro:3,cho:12,fat:4},
-  {kw:["奶茶","拿铁"],illust:"🧋",kcal:130,pro:3,cho:15,fat:5},
-  {kw:["坚果"],illust:"🌰",kcal:60,pro:2,cho:2,fat:5},
-  {kw:["酸奶"],illust:"🍨",kcal:70,pro:4,cho:8,fat:2},
-  {kw:["面包"],illust:"🍞",kcal:140,pro:4,cho:24,fat:3},
-  {kw:["青菜","菠菜","蔬菜"],illust:"🥬",kcal:25,pro:2,cho:4,fat:0.3},
+  {"kw":["鸡蛋"],"illust":"🍳","kcal":70,"pro":6,"cho":0.6,"fat":5},
+  {"kw":["烧麦"],"illust":"🥟","kcal":100,"pro":3,"cho":16,"fat":3},
+  {"kw":["香肠"],"illust":"🌭","kcal":80,"pro":5,"cho":1,"fat":6},
+  {"kw":["牛奶"],"illust":"🥛","kcal":120,"pro":6,"cho":9,"fat":5},
+  {"kw":["咖啡"],"illust":"☕","kcal":5,"pro":0,"cho":0,"fat":0},
+  {"kw":["米饭","白米饭"],"illust":"🍚","kcal":116,"pro":2.6,"cho":26,"fat":0.3},
+  {"kw":["藜麦"],"illust":"🌾","kcal":120,"pro":4.4,"cho":21,"fat":1.9},
+  {"kw":["鸡胸"],"illust":"🍗","kcal":110,"pro":23,"cho":0,"fat":2},
+  {"kw":["豆腐"],"illust":"🧈","kcal":85,"pro":8,"cho":3,"fat":5},
+  {"kw":["鱼","鱼虾"],"illust":"🐟","kcal":100,"pro":18,"cho":0,"fat":3},
+  {"kw":["番茄","黄瓜"],"illust":"🥒","kcal":20,"pro":1,"cho":4,"fat":0.2},
+  {"kw":["小笼包"],"illust":"🥟","kcal":90,"pro":3,"cho":12,"fat":4},
+  {"kw":["奶茶","拿铁"],"illust":"🧋","kcal":130,"pro":3,"cho":15,"fat":5},
+  {"kw":["坚果"],"illust":"🌰","kcal":60,"pro":2,"cho":2,"fat":5},
+  {"kw":["酸奶"],"illust":"🍨","kcal":70,"pro":4,"cho":8,"fat":2},
+  {"kw":["面包"],"illust":"🍞","kcal":140,"pro":4,"cho":24,"fat":3},
+  {"kw":["青菜","菠菜","蔬菜"],"illust":"🥬","kcal":25,"pro":2,"cho":4,"fat":0.3},
 ];
+const DAILY_TARGET = 1000;
+let records = JSON.parse(localStorage.getItem("dietRecords")) || {};
+let selectedImgData = null;
 
-// 解析文字，自动匹配食物
-function parseFood(text){
-  text = text.toLowerCase();
-  let total = {illust:"🍽️",kcal:0,pro:0,cho:0,fat:0};
-  let matchedFoods = [];
-  for(const food of foodMeta){
-    for(const keyword of food.kw){
-      if(text.includes(keyword)){
-        total.kcal += food.kcal;
-        total.pro += food.pro;
-        total.cho += food.cho;
-        total.fat += food.fat;
-        matchedFoods.push(food);
-        break;
-      }
-    }
-  }
-  if(matchedFoods.length>0) total.illust = matchedFoods[0].illust;
-  return total;
-}
+// 初始化
+const now = new Date();
+document.getElementById("monthSel").value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+renderAll();
 
-// 本地存储
-function getAllRecords(){
-  let raw = localStorage.getItem("dietLog");
-  return raw ? JSON.parse(raw) : {};
-}
-function saveAllRecords(obj){
-  localStorage.setItem("dietLog",JSON.stringify(obj));
-}
-
-// 获取当日日期 yyyy-mm-dd
-function getTodayStr(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-}
-
-// 拍照相关
-let capturedImageBase64 = "";
-function openCamera(){
-  const input = document.getElementById("uploadPhoto");
-  input.click();
-}
-function handlePhoto(e){
+// 图片预览
+document.getElementById("imgUpload").onchange = function(e){
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = function(ev){
-    capturedImageBase64 = ev.target.result;
+  reader.onload = ev=>{
+    selectedImgData = ev.target.result;
+    document.getElementById("imgPreview").innerHTML = `<img class="preview" src="${selectedImgData}">`;
   }
   reader.readAsDataURL(file);
 }
 
+// 解析食物文字
+function parseFood(text){
+  const textLow = text.toLowerCase();
+  const out = {illust:"🍽️",kcal:0,pro:0,cho:0,fat:0};
+  for(const f of foodMeta){
+    for(const kw of f.kw){
+      if(textLow.includes(kw)){
+        out.kcal += f.kcal;
+        out.pro += f.pro;
+        out.cho += f.cho;
+        out.fat += f.fat;
+        out.illust = f.illust;
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+// 计算单日总和
+function calcDay(items){
+  let kcal=0,pro=0;
+  for(let i of items){kcal+=i.kcal;pro+=i.pro;}
+  return {kcal,pro:pro.toFixed(1)};
+}
+
+// 保存数据到本地存储
+function save(){
+  localStorage.setItem("dietRecords",JSON.stringify(records));
+}
+
 // 添加记录
-function addFoodRecord(){
+function addRecord(){
   const foodText = document.getElementById("foodInput").value.trim();
-  const weightText = document.getElementById("weightHint").value.trim();
-  const mealSel = document.getElementById("mealType").value;
+  const weight = document.getElementById("weightInput").value.trim();
+  const meal = document.getElementById("mealSel").value;
   if(!foodText){alert("请输入食物名称");return;}
   const nutr = parseFood(foodText);
-  const dayKey = getTodayStr();
-  const all = getAllRecords();
-  if(!all[dayKey]) all[dayKey] = {items:[]};
-  all[dayKey].items.push({
-    meal:mealSel,
-    foodText:foodText,
-    weight:weightText,
-    photo:capturedImageBase64,
-    ...nutr,
-    ts:Date.now()
-  });
-  saveAllRecords(all);
+  const today = new Date().toISOString().slice(0,10);
+  if(!records[today]) records[today] = {items:[]};
+  records[today].items.push({meal,foodText,weight,photo:selectedImgData,...nutr});
+  save();
   //清空输入
   document.getElementById("foodInput").value="";
-  document.getElementById("weightHint").value="";
-  capturedImageBase64="";
-  renderMonth();
+  document.getElementById("weightInput").value="";
+  document.getElementById("imgUpload").value="";
+  selectedImgData=null;
+  document.getElementById("imgPreview").innerHTML="";
+  renderAll();
+  alert("✅记录添加成功");
 }
 
+// 删除【单条】记录
+function deleteItem(dayStr, index){
+  if(!confirm("确定删除这条记录吗？")) return;
+  records[dayStr].items.splice(index,1);
+  // 如果当天条目清空，删除当天记录
+  if(records[dayStr].items.length === 0) delete records[dayStr];
+  save();
+  renderAll();
+}
+
+//清空今日全部
 function clearToday(){
-  const dayKey = getTodayStr();
-  const all = getAllRecords();
-  delete all[dayKey];
-  saveAllRecords(all);
-  renderMonth();
+  const today = new Date().toISOString().slice(0,10);
+  if(confirm("确定清空今日全部记录？")){
+    delete records[today];
+    save();
+    renderAll();
+  }
 }
 
-// 计算一天总热量
-function getDayTotal(dayData){
-  if(!dayData || !dayData.items) return {kcal:0, pro:0};
-  let kcal=0,pro=0;
-  dayData.items.forEach(i=>{
-    kcal += i.kcal;
-    pro += i.pro;
-  })
-  return {kcal,pro};
-}
-
-// 获取日历格子对应的css class
+//获取日历格子颜色class
 function getCalClass(kcal){
-  if(kcal === 0) return "cal-empty";
-  if(kcal < 800) return "cal-low";
-  if(kcal <=1000) return "cal-good";
+  if(kcal===0) return "cal-empty";
+  if(kcal<800) return "cal-low";
+  if(kcal<=1000) return "cal-good";
   return "cal-over";
 }
 
-// 渲染日历（整月所有天数，一眼看每日热量+颜色标记）
-function renderMonth(){
-  const picker = document.getElementById("monthPicker");
-  if(!picker.value){
-    const now = new Date();
-    picker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-  }
-  const [year,month] = picker.value.split("-").map(Number);
-  const allRecords = getAllRecords();
-  const calendarBox = document.getElementById("calendarBox");
-  const detailBox = document.getElementById("dayDetailBox");
-  detailBox.style.display = "none";
+//渲染全部页面
+function renderAll(){
+  //更新热量缺口
+  const today = new Date().toISOString().slice(0,10);
+  const todayItems = records[today]?.items || [];
+  const sumToday = calcDay(todayItems);
+  const deficit = DAILY_TARGET - sumToday.kcal;
+  document.getElementById("deficit").innerText = `${deficit} kcal`;
 
-  // 获取当月总天数
-  const daysInMonth = new Date(year, month, 0).getDate();
+  //渲染日历
+  const monthVal = document.getElementById("monthSel").value;
+  const [y,m] = monthVal.split("-").map(Number);
+  const firstDay = new Date(y,m-1,1);
+  const lastDay = new Date(y,m,0).getDate();
   let calHtml = "";
-  for(let d=1;d<=daysInMonth;d++){
-    const dayStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-    const dayData = allRecords[dayStr];
-    const dayTotal = getDayTotal(dayData);
-    const cls = getCalClass(dayTotal.kcal);
-    calHtml += `<div class="calendar-day ${cls}" onclick="showDayDetail('${dayStr}')">
-      ${d}号<br/>${dayTotal.kcal}kcal
-    </div>`
+  for(let d=1;d<=lastDay;d++){
+    const dayStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const items = records[dayStr]?.items || [];
+    const s = calcDay(items);
+    const cls = getCalClass(s.kcal);
+    calHtml += `<div class="cal-day ${cls}" onclick="selectDay('${dayStr}')">${d}号<br/>${s.kcal}kcal</div>`;
   }
-  calendarBox.innerHTML = calHtml;
+  document.getElementById("calendarBox").innerHTML = calHtml;
 
-  // 更新顶部【热量缺口】（目标取1000kcal为每日摄入目标计算缺口）
-  const todayTotal = getDayTotal(allRecords[getTodayStr()]);
-  const deficit = 1000 - todayTotal.kcal;
-  document.querySelector(".stat>div:nth-child(4)").innerHTML = `热量缺口<br/>${deficit} kcal`;
+  //日期下拉框
+  let optHtml = "";
+  for(let d=1;d<=lastDay;d++){
+    const dayStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    optHtml += `<option value="${dayStr}">${dayStr}</option>`;
+  }
+  document.getElementById("daySelect").innerHTML = optHtml;
+  showDetail(document.getElementById("daySelect").value);
 }
 
-// 点击日期，展开当日明细
-function showDayDetail(dayStr){
-  const allRecords = getAllRecords();
-  const dayData = allRecords[dayStr];
-  const detailBox = document.getElementById("dayDetailBox");
-  if(!dayData || !dayData.items || dayData.items.length===0){
-    detailBox.innerHTML = `<strong>${dayStr}</strong><br/>📭今日暂无饮食记录`;
-    detailBox.style.display = "block";
+//选择日期
+function selectDay(dayStr){
+  document.getElementById("daySelect").value = dayStr;
+  showDetail(dayStr);
+}
+
+//展示单日明细（增加单条删除按钮）
+function showDetail(dayStr){
+  const items = records[dayStr]?.items || [];
+  const box = document.getElementById("detailBox");
+  if(!items.length){
+    box.innerHTML = "<p>📭该日期暂无记录</p>";
     return;
   }
-  const dayTotal = getDayTotal(dayData);
-  const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
-  let html = `<strong>📆${dayStr}</strong>  总热量：${dayTotal.kcal} kcal｜蛋白${dayTotal.pro.toFixed(1)}g`;
-  dayData.items.forEach(it=>{
-    html += `
-    <div class="meal-item">
-      <div class="food-illust">${it.illust}</div>
-      <div>
-        <div>${mealMap[it.meal]}｜${it.foodText}</div>
-        <div class="tip">${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
-        ${it.photo ? `<img class="photo-img" src="${it.photo}">` : ""}
-      </div>
-    </div>`
-  })
-  detailBox.innerHTML = html;
-  detailBox.style.display = "block";
+  const sum = calcDay(items);
+  let html = `<p>📆${dayStr}｜总热量：${sum.kcal} kcal｜蛋白：${sum.pro}g</p>`;
+  const mealName = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
+  for(let idx=0; idx<items.length; idx++){
+    const it = items[idx];
+    html += `<div class="detail-item">
+    <div class="detail-content">
+    ${it.illust} ${mealName[it.meal]}｜${it.foodText}<br>
+    ${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g
+    ${it.photo ? `<br><img class="preview" src="${it.photo}">` : ""}
+    </div>
+    <button class="del" onclick="deleteItem('${dayStr}',${idx})">删除</button>
+    </div>`;
+  }
+  box.innerHTML = html;
 }
 
-//初始化
-document.getElementById("monthPicker").addEventListener("change",renderMonth);
-renderMonth();
+//月份切换监听
+document.getElementById("monthSel").onchange = renderAll;
+document.getElementById("daySelect").onchange = function(){showDetail(this.value);}
+
+// ===== 导出导入备份 =====
+function exportData(){
+  const jsonStr = JSON.stringify(records,null,2);
+  const blob = new Blob([jsonStr],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `diet_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const imported = JSON.parse(e.target.result);
+      if(confirm("确认导入？会合并当前记录，重复日期会覆盖！")){
+        records = {...records, ...imported};
+        save();
+        renderAll();
+        alert("✅导入成功");
+      }
+    }catch(err){
+      alert("❌文件解析失败，不是有效的备份文件");
+    }
+  }
+  reader.readAsText(file);
+}
 </script>
 </body>
 </html>
