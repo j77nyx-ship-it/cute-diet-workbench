@@ -41,7 +41,11 @@ button{
   cursor:pointer;
 }
 button:hover{background:#ff66aa;}
-.month-selector{text-align:center;margin:12px 0;}
+.btn-del{
+  background:#ff6666;
+  padding:4px 8px;
+  font-size:12px;
+}
 .tip{font-size:13px;color:#995577;}
 .photo-area{margin-top:12px;}
 #cameraPreview{max-width:100%;border-radius:14px;display:none;}
@@ -80,6 +84,7 @@ button:hover{background:#ff66aa;}
   display:flex;
   gap:12px;
   align-items:flex-start;
+  justify-content:space-between;
   padding:10px 6px;
   border-bottom:1px dashed #ffbbd8;
 }
@@ -148,10 +153,10 @@ button:hover{background:#ff66aa;}
 
   <div class="row" style="margin-top:10px;">
     <button onclick="addFoodRecord()">➕添加记录</button>
-    <button onclick="clearToday()">🗑清空今日</button>
+    <button onclick="clearToday()">🗑清空今日全部</button>
     <button onclick="exportJson()">💾导出备份</button>
   </div>
-  <div class="tip">✅使用方法：复制【食物｜热量｜蛋白｜碳水｜脂肪】粘贴到上方食物框，自动填入营养，数值不对可手动修改</div>
+  <div class="tip">✅使用方法：复制【食物｜热量｜蛋白｜碳水｜脂肪】粘贴到上方食物框，自动填入营养，数值不对可手动修改。每条记录支持单独删除！</div>
 </div>
 
 <!-- AI建议模块 -->
@@ -270,6 +275,15 @@ function addFoodRecord(){
   capturedImageBase64="";
   renderMonth();
   alert("✅已保存这条记录");
+}
+
+// 删除单条记录
+function deleteItem(dayStr, tsIndex){
+  const all = getAllRecords();
+  all[dayStr].items.splice(tsIndex,1);
+  saveAllRecords(all);
+  renderMonth();
+  showDayDetail(dayStr);
 }
 
 function clearToday(){
@@ -395,7 +409,7 @@ function showDayDetail(dayStr){
   const dayTotal = getDayTotal(dayData);
   const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
   let html = `<strong>📆${dayStr}</strong>  总热量：${dayTotal.kcal} kcal｜蛋白${dayTotal.pro.toFixed(1)}g`;
-  dayData.items.forEach(it=>{
+  dayData.items.forEach((it,idx)=>{
     html += `
     <div class="meal-item">
       <div>
@@ -403,6 +417,7 @@ function showDayDetail(dayStr){
         <div class="tip">${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
         ${it.photo ? `<img class="photo-img" src="${it.photo}">` : ""}
       </div>
+      <button class="btn-del" onclick="deleteItem('${dayStr}',${idx})">❌删除</button>
     </div>`
   })
   if(dayData.advice){
