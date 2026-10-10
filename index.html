@@ -55,15 +55,20 @@ button:hover{background:#ff66aa;}
   margin-top:12px;
 }
 .calendar-day{
-  background:#ffe6f2;
   border-radius:12px;
   padding:8px 4px;
   text-align:center;
   cursor:pointer;
   font-size:13px;
 }
-.calendar-day:hover{background:#ffc8e0;}
+.calendar-day:hover{filter:brightness(0.95);}
 .calendar-day.active{border:2px solid #ff66aa;}
+/* 日历颜色分类 */
+.cal-empty{background:#ffe6f2;}
+.cal-low{background:#d9edf7;}
+.cal-good{background:#d4edda;}
+.cal-over{background:#ffe6cc;}
+
 .day-detail{
   margin-top:14px;
   padding:14px;
@@ -132,6 +137,9 @@ button:hover{background:#ff66aa;}
 <div class="card month-selector">
   <label>📅选择月份查看：</label>
   <input type="month" id="monthPicker"/>
+  <div style="font-size:13px;margin:6px 0;text-align:center;">
+    🟢正常800-1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录
+  </div>
   <!-- 日历区域，整月每日热量一览 -->
   <div class="calendar-grid" id="calendarBox"></div>
   <!-- 选中日期的明细，点击日期才显示 -->
@@ -260,7 +268,15 @@ function getDayTotal(dayData){
   return {kcal,pro};
 }
 
-// 渲染日历（整月所有天数，一眼看每日热量）
+// 获取日历格子对应的css class
+function getCalClass(kcal){
+  if(kcal === 0) return "cal-empty";
+  if(kcal < 800) return "cal-low";
+  if(kcal <=1000) return "cal-good";
+  return "cal-over";
+}
+
+// 渲染日历（整月所有天数，一眼看每日热量+颜色标记）
 function renderMonth(){
   const picker = document.getElementById("monthPicker");
   if(!picker.value){
@@ -280,7 +296,8 @@ function renderMonth(){
     const dayStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     const dayData = allRecords[dayStr];
     const dayTotal = getDayTotal(dayData);
-    calHtml += `<div class="calendar-day" onclick="showDayDetail('${dayStr}')">
+    const cls = getCalClass(dayTotal.kcal);
+    calHtml += `<div class="calendar-day ${cls}" onclick="showDayDetail('${dayStr}')">
       ${d}号<br/>${dayTotal.kcal}kcal
     </div>`
   }
