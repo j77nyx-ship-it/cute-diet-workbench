@@ -3,26 +3,26 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍡我的减脂小工作台</title>
+<title>🍡减脂饮食小工作台</title>
 <style>
 *{box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
 body{
   background:#fff7fb;
   max-width:720px;
-  margin:16px auto;
+  margin:20px auto;
   padding:14px;
   color:#443344;
 }
 .card{
   background:#ffffff;
   border-radius:22px;
-  padding:18px;
+  padding:20px;
   margin-bottom:16px;
   box-shadow:0 3px 10px #ffd6e888;
   border:2px solid #ffe6f2;
 }
-h1{text-align:center;color:#dd6699;font-size:22px;}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;}
+h1{text-align:center;color:#dd6699;font-size:24px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;align-items:center;}
 select,input,textarea{
   padding:10px 12px;
   border-radius:14px;
@@ -45,7 +45,7 @@ button:hover{background:#ff66aa;}
 .day-item{
   background:#fff0f7;
   border-radius:16px;
-  padding:12px;
+  padding:14px;
   margin:10px 0;
 }
 .meal-item{
@@ -53,9 +53,9 @@ button:hover{background:#ff66aa;}
   gap:12px;
   align-items:center;
   padding:8px 6px;
-  border-bottom:1px dashed #ffd6e8;
+  border-bottom:1px dashed #ffbbd8;
 }
-.food‑illust{font-size:34px;}
+.food-illust{font-size:34px;}
 .stat{
   display:grid;
   grid-template-columns:1fr 1fr 1fr 1fr;
@@ -70,10 +70,13 @@ button:hover{background:#ff66aa;}
   font-size:13px;
 }
 .tip{font-size:13px;color:#995577;}
+.photo-area{margin-top:12px;}
+#cameraPreview{max-width:100%;border-radius:14px;display:none;}
+.photo-img{max-width:120px;border-radius:8px;margin:4px;}
 </style>
 </head>
 <body>
-<h1>🍡减脂饮食小工作台</h1>
+<h1>💄减脂饮食小工作台</h1>
 
 <div class="card">
   <div class="stat">
@@ -93,6 +96,15 @@ button:hover{background:#ff66aa;}
     <input id="foodInput" placeholder="输入食物，例如：鸡蛋1个，白米饭小半碗"/>
   </div>
   <textarea id="weightHint" placeholder="补充分量描述（可选）" rows="2"></textarea>
+
+  <!-- 📸拍照打卡模块 -->
+  <div class="photo-area">
+    <button onclick="openCamera()">📸拍照打卡</button>
+    <input type="file" id="uploadPhoto" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
+    <video id="cameraPreview" autoplay playsinline></video>
+    <button id="takePhotoBtn" onclick="capturePhoto()" style="display:none;">拍摄保存</button>
+  </div>
+
   <div class="row" style="margin-top:10px;">
     <button onclick="addFoodRecord()">➕添加记录（自动估算营养）</button>
     <button onclick="clearToday()">🗑清空今日</button>
@@ -108,33 +120,46 @@ button:hover{background:#ff66aa;}
 <div id="historyContainer"></div>
 
 <script>
-// 食物匹配插画与简易营养库
+// 食物营养库
 const foodMeta = [
   {kw:["鸡蛋"],illust:"🍳",kcal:70,pro:6,cho:0.6,fat:5},
   {kw:["烧麦"],illust:"🥟",kcal:100,pro:3,cho:16,fat:3},
   {kw:["香肠"],illust:"🌭",kcal:80,pro:5,cho:1,fat:6},
-  {kw:["牛奶"],illust:"🥛",kcal:120,pro:6,cho:9,fat:6},
+  {kw:["牛奶"],illust:"🥛",kcal:120,pro:6,cho:9,fat:5},
   {kw:["咖啡"],illust:"☕",kcal:5,pro:0,cho:0,fat:0},
   {kw:["米饭","白米饭"],illust:"🍚",kcal:116,pro:2.6,cho:26,fat:0.3},
   {kw:["藜麦"],illust:"🌾",kcal:120,pro:4.4,cho:21,fat:1.9},
-  {kw:["鸡胸","鸡胸肉"],illust:"🍗",kcal:110,pro:23,cho:0,fat:2},
+  {kw:["鸡胸"],illust:"🍗",kcal:110,pro:23,cho:0,fat:2},
   {kw:["豆腐"],illust:"🧈",kcal:85,pro:8,cho:3,fat:5},
   {kw:["鱼","鱼虾"],illust:"🐟",kcal:100,pro:18,cho:0,fat:3},
-  {kw:["番茄","小番茄","黄瓜"],illust:"🥒",kcal:20,pro:1,cho:4,fat:0.2},
+  {kw:["番茄","黄瓜"],illust:"🥒",kcal:20,pro:1,cho:4,fat:0.2},
   {kw:["小笼包"],illust:"🥟",kcal:90,pro:3,cho:12,fat:4},
   {kw:["奶茶","拿铁"],illust:"🧋",kcal:130,pro:3,cho:15,fat:5},
   {kw:["坚果"],illust:"🌰",kcal:60,pro:2,cho:2,fat:5},
   {kw:["酸奶"],illust:"🍨",kcal:70,pro:4,cho:8,fat:2},
   {kw:["面包"],illust:"🍞",kcal:140,pro:4,cho:24,fat:3},
-  {kw:["蔬菜","青菜","菠菜"],illust:"🥬",kcal:25,pro:2,cho:4,fat:0.3},
+  {kw:["青菜","菠菜","蔬菜"],illust:"🥬",kcal:25,pro:2,cho:4,fat:0.3},
 ];
 
-// 根据文字匹配插画和基础营养
+// 解析文字，自动匹配食物
 function parseFood(text){
   text = text.toLowerCase();
-  let match = foodMeta.find(i=>i.kw.some(k=>text.includes(k)));
-  if(!match) return {illust:"🍽️",kcal:45,pro:1,cho:6,fat:2};
-  return {...match};
+  let total = {illust:"🍽️",kcal:0,pro:0,cho:0,fat:0};
+  let matchedFoods = [];
+  for(const food of foodMeta){
+    for(const keyword of food.kw){
+      if(text.includes(keyword)){
+        total.kcal += food.kcal;
+        total.pro += food.pro;
+        total.cho += food.cho;
+        total.fat += food.fat;
+        matchedFoods.push(food);
+        break;
+      }
+    }
+  }
+  if(matchedFoods.length>0) total.illust = matchedFoods[0].illust;
+  return total;
 }
 
 // 本地存储
@@ -146,35 +171,55 @@ function saveAllRecords(obj){
   localStorage.setItem("dietLog",JSON.stringify(obj));
 }
 
-// 获取今日 yyyy‑MM‑dd
+// 获取当日日期 yyyy-mm-dd
 function getTodayStr(){
-  const d=new Date();
-  const y=d.getFullYear();
-  const m=(d.getMonth()+1).toString().padStart(2,"0");
-  const day=d.getDate().toString().padStart(2,"0");
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
   return `${y}-${m}-${day}`;
 }
 
-// 添加一条记录
+// 拍照相关
+let cameraStream = null;
+let capturedImageBase64 = "";
+function openCamera(){
+  const input = document.getElementById("uploadPhoto");
+  input.click();
+}
+function handlePhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    capturedImageBase64 = ev.target.result;
+  }
+  reader.readAsDataURL(file);
+}
+
+// 添加记录
 function addFoodRecord(){
   const foodText = document.getElementById("foodInput").value.trim();
   const weightText = document.getElementById("weightHint").value.trim();
-  const meal = document.getElementById("mealType").value;
-  if(!foodText){alert("请输入吃了什么");return;}
-  const meta = parseFood(foodText);
+  const mealSel = document.getElementById("mealType").value;
+  if(!foodText){alert("请输入食物名称");return;}
+  const nutr = parseFood(foodText);
   const dayKey = getTodayStr();
   const all = getAllRecords();
   if(!all[dayKey]) all[dayKey] = {items:[]};
   all[dayKey].items.push({
-    meal,
-    foodText,
-    weightText,
-    ...meta,
+    meal:mealSel,
+    foodText:foodText,
+    weight:weightText,
+    photo:capturedImageBase64,
+    ...nutr,
     ts:Date.now()
   });
   saveAllRecords(all);
+  //清空输入
   document.getElementById("foodInput").value="";
   document.getElementById("weightHint").value="";
+  capturedImageBase64="";
   renderMonth();
 }
 
@@ -186,66 +231,57 @@ function clearToday(){
   renderMonth();
 }
 
-// 渲染选择月份
+//渲染页面
 function renderMonth(){
   const picker = document.getElementById("monthPicker");
   if(!picker.value){
-    const now=new Date();
-    picker.value = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,"0")}`;
+    const now = new Date();
+    picker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   }
   const selMonth = picker.value;
   const container = document.getElementById("historyContainer");
   const all = getAllRecords();
-  const dayKeys = Object.keys(all).filter(d=>d.startsWith(selMonth)).sort();
-  if(dayKeys.length===0){
+  let html="";
+  //筛选当月记录
+  const dayList = Object.keys(all).filter(k=>k.startsWith(selMonth)).sort();
+  if(dayList.length===0){
     container.innerHTML = `<div class="card"><div style="text-align:center;">📭本月暂无饮食记录</div></div>`;
     return;
   }
-  let html="";
-  for(let dk of dayKeys){
-    const dayData = all[dk];
+  for(const day of dayList){
+    const dayData = all[day];
     const items = dayData.items || [];
-    // 区分三餐 / 零食
-    const threeMeal = items.filter(x=>x.meal!=='snack');
-    const snackItems = items.filter(x=>x.meal==='snack');
-    const sum3 = threeMeal.reduce((s,i)=>{
-      return {
-        kcal:s.kcal+i.kcal,
-        pro:s.pro+i.pro,
-        cho:s.cho+i.cho,
-        fat:s.fat+i.fat
-      }
-    },{kcal:0,pro:0,cho:0,fat:0});
-    const sumSnack = snackItems.reduce((s,i)=>{
-      return {
-        kcal:s.kcal+i.kcal,
-        pro:s.pro+i.pro,
-        cho:s.cho+i.cho,
-        fat:s.fat+i.fat
-      }
-    },{kcal:0,pro:0,cho:0,fat:0});
+    //区分三餐和零食
+    const threeMealItems = items.filter(x=>x.meal !== "snack");
+    const snackItems = items.filter(x=>x.meal === "snack");
+    const sum3 = threeMealItems.reduce((s,i)=>({
+      kcal:s.kcal+i.kcal,pro:s.pro+i.pro,cho:s.cho+i.cho,fat:s.fat+i.fat
+    }),{kcal:0,pro:0,cho:0,fat:0});
+    const sumSnack = snackItems.reduce((s,i)=>({
+      kcal:s.kcal+i.kcal,pro:s.pro+i.pro,cho:s.cho+i.cho,fat:s.fat+i.fat
+    }),{kcal:0,pro:0,cho:0,fat:0});
     const totalAll = {
-      kcal:sum3.kcal+sumSnack.kcal,
-      pro:sum3.pro+sumSnack.pro,
-      cho:sum3.cho+sumSnack.cho,
-      fat:sum3.fat+sumSnack.fat
+      kcal:sum3.kcal + sumSnack.kcal,
+      pro:sum3.pro + sumSnack.pro
     };
+    // 转换meal文字
+    const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
     html += `<div class="day-item">
-      <div><strong>📆${dk}</strong></div>
+      <div><strong>📆${day}</strong></div>
       <div class="stat">
         <div>三餐：${sum3.kcal} kcal<br/><span class="tip">目标800‑1000</span></div>
         <div>零食：${sumSnack.kcal} kcal<br/><span class="tip">上限150</span></div>
         <div>全天：${totalAll.kcal} kcal</div>
         <div>蛋白：${totalAll.pro.toFixed(1)}g</div>
       </div>`;
-    for(let it of items){
-      let mealLabel = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"}[it.meal];
+    for(const it of items){
       html += `
       <div class="meal-item">
-        <div class="food‑illust">${it.illust}</div>
-        <div style="flex:1;">
-          <div>${mealLabel}｜${it.foodText}</div>
-          <div class="tip">${it.weightText||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
+        <div class="food-illust">${it.illust}</div>
+        <div>
+          <div>${mealMap[it.meal]}｜${it.foodText}</div>
+          <div class="tip">${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
+          ${it.photo ? `<img class="photo-img" src="${it.photo}">` : ""}
         </div>
       </div>`;
     }
@@ -254,6 +290,7 @@ function renderMonth(){
   container.innerHTML = html;
 }
 
+//初始化
 document.getElementById("monthPicker").addEventListener("change",renderMonth);
 renderMonth();
 </script>
