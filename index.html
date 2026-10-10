@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍡减脂饮食小工作台</title>
+<title>🍡减脂饮食小工作台（支持补录历史日期）</title>
 <style>
 *{box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
 body{
@@ -158,6 +158,12 @@ button:hover{background:#ff66aa;}
 <h1>💄减脂饮食小工作台</h1>
 
 <div class="card">
+  <!-- ==========新增：补录日期选择器========== -->
+  <div class="row">
+    <label>📝录入日期（可补录历史）</label>
+    <input type="date" id="recordDatePicker">
+  </div>
+
   <div class="stat">
     <div>总摄入<br/><span id="showTotalKcal">0</span> kcal</div>
     <div>运动消耗<br/><span id="showExBurn">0</span> kcal</div>
@@ -199,10 +205,10 @@ button:hover{background:#ff66aa;}
 
   <div class="row" style="margin-top:10px;">
     <button onclick="addFoodRecord()">➕添加记录</button>
-    <button onclick="clearToday()">🗑清空今日全部</button>
+    <button onclick="clearToday()">🗑清空【当前选中日期】全部</button>
     <button onclick="exportJson()">💾导出备份</button>
   </div>
-  <div class="tip">✅使用方法：复制【食物｜热量｜蛋白｜碳水｜脂肪】粘贴到上方食物框，自动填入营养，数值可手动修改。每条记录支持单独删除，可上传餐食照片，回看时有缩略图。<br>⚠️体重输入完成，点击页面空白处保存。</div>
+  <div class="tip">✅使用方法：顶部【录入日期】选择要补录的那天，再填食物/体重；输入体重后点空白保存。<br>⚠️定期导出备份json，清浏览器缓存会丢数据</div>
 
   <hr style="margin:16px 0;border:1px dashed #ffcce0;">
   <h4>🏃运动消耗记录</h4>
@@ -218,15 +224,15 @@ button:hover{background:#ff66aa;}
   <h3>🤖饮食AI助手</h3>
   <div class="tip">点击【复制今日记录】，把文本发给豆包，拿到建议再粘贴回来</div>
   <div class="row">
-    <button onclick="copyTodayLog()">📋复制今日全部记录</button>
+    <button onclick="copyTodayLog()">📋复制【当前选中日期】全部记录</button>
   </div>
   <div class="ai-box">
     <label>粘贴AI返回的饮食建议到这里保存：</label>
     <textarea id="aiSuggestInput" style="width:100%;height:120px;"></textarea>
     <div class="row">
-      <button onclick="saveAiAdvice()">✅保存今日建议</button>
+      <button onclick="saveAiAdvice()">✅保存到当前选中日期</button>
     </div>
-    <div>今日保存的建议：</div>
+    <div>当日保存的建议：</div>
     <div class="ai-result" id="aiAdviceShow">暂无</div>
   </div>
 </div>
@@ -247,6 +253,11 @@ button:hover{background:#ff66aa;}
 
 <script>
 let capturedImageBase64 = "";
+
+// 获取当前选中的录入日期（用于补录）
+function getSelectedDateStr(){
+  return document.getElementById("recordDatePicker").value;
+}
 
 function showMsg(text,isSuccess=true){
   const box = document.getElementById("msgBox");
@@ -323,8 +334,9 @@ function closeModal(){
   document.getElementById("imgModal").classList.remove("show");
 }
 
+// 保存体重：保存到【选中的日期】，不再固定今天
 function saveWeight(){
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const all = getAllRecords();
   if(!all[dayKey]) all[dayKey]={items:[],exercises:[],advice:"",wMorning:"",wNight:""};
   all[dayKey].wMorning = document.getElementById("morningWeight").value.trim();
@@ -333,12 +345,32 @@ function saveWeight(){
   renderMonth();
 }
 
+// 切换补录日期，自动加载那天的体重数据
 function bindWeightInput(){
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const all = getAllRecords();
   if(!all[dayKey]) all[dayKey]={items:[],exercises:[],advice:"",wMorning:"",wNight:""};
   document.getElementById("morningWeight").value = all[dayKey].wMorning||"";
   document.getElementById("nightWeight").value = all[dayKey].wNight||"";
+
+  // 加载当日运动列表
+  let exHtml="";
+  if(all[dayKey] && Array.isArray(all[dayKey].exercises)){
+    all[dayKey].exercises.forEach((ex,idx)=>{
+      exHtml += `<div class="ex-item">${ex.name}｜消耗 ${ex.burn} kcal
+      <button class="btn-del" onclick="deleteExercise(${idx})">❌删除</button></div>`
+    })
+  }
+  document.getElementById("todayExerciseList").innerHTML = exHtml || `<div class="tip">该日暂无运动记录</div>`;
+  document.getElementById("aiAdviceShow").innerText = (all[dayKey]?.advice)||"暂无";
+  document.getElementById("aiSuggestInput").value = (all[dayKey]?.advice)||"";
+
+  // 更新顶部统计
+  const t = getDayTotal(all[dayKey]);
+  document.getElementById("showTotalKcal").innerText = t.kcal;
+  document.getElementById("showExBurn").innerText = t.exBurn;
+  document.getElementById("showNetKcal").innerText = t.net;
+  document.getElementById("showTotalPro").innerText = t.pro.toFixed(1);
 }
 
 function addFoodRecord(){
@@ -353,8 +385,7 @@ function addFoodRecord(){
     showMsg("请输入食物名称",false);
     return;
   }
-
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const all = getAllRecords();
   if(!all[dayKey]) all[dayKey] = {items:[],exercises:[],advice:"",wMorning:"",wNight:""};
   if(!Array.isArray(all[dayKey].items)) all[dayKey].items = [];
@@ -381,6 +412,7 @@ function addFoodRecord(){
   capturedImageBase64="";
 
   renderMonth();
+  bindWeightInput();
   showMsg("✅记录保存成功");
 }
 
@@ -391,7 +423,7 @@ function addExercise(){
     showMsg("请填写运动名称",false);
     return;
   }
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const all = getAllRecords();
   if(!all[dayKey]) all[dayKey]={items:[],exercises:[],advice:"",wMorning:"",wNight:""};
   if(!Array.isArray(all[dayKey].exercises)) all[dayKey].exercises=[];
@@ -401,17 +433,19 @@ function addExercise(){
   document.getElementById("exNameInput").value="";
   document.getElementById("exBurnInput").value="";
   renderMonth();
+  bindWeightInput();
   showMsg("✅运动已添加");
 }
 
 function deleteExercise(idx){
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const all = getAllRecords();
   if(all[dayKey] && Array.isArray(all[dayKey].exercises)){
     all[dayKey].exercises.splice(idx,1);
     saveAllRecords(all);
   }
   renderMonth();
+  bindWeightInput();
 }
 
 function deleteItem(dayStr, tsIndex){
@@ -425,12 +459,13 @@ function deleteItem(dayStr, tsIndex){
 }
 
 function clearToday(){
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const all = getAllRecords();
   delete all[dayKey];
   saveAllRecords(all);
   renderMonth();
-  showMsg("今日记录已清空");
+  bindWeightInput();
+  showMsg(`✅【${dayKey}】全部记录清空`);
 }
 
 function getDayTotal(dayData){
@@ -458,7 +493,6 @@ function getCalClass(kcal){
 }
 
 function renderMonth(){
-  bindWeightInput();
   const picker = document.getElementById("monthPicker");
   if(!picker.value){
     const now = new Date();
@@ -485,34 +519,15 @@ function renderMonth(){
     </div>`
   }
   calendarBox.innerHTML = calHtml;
-
-  const todayKey = getTodayStr();
-  const todayData = allRecords[todayKey];
-  const t = getDayTotal(todayData);
-  document.getElementById("showTotalKcal").innerText = t.kcal;
-  document.getElementById("showExBurn").innerText = t.exBurn;
-  document.getElementById("showNetKcal").innerText = t.net;
-  document.getElementById("showTotalPro").innerText = t.pro.toFixed(1);
-
-  let exHtml="";
-  if(todayData && Array.isArray(todayData.exercises)){
-    todayData.exercises.forEach((ex,idx)=>{
-      exHtml += `<div class="ex-item">${ex.name}｜消耗 ${ex.burn} kcal
-      <button class="btn-del" onclick="deleteExercise(${idx})">❌删除</button></div>`
-    })
-  }
-  document.getElementById("todayExerciseList").innerHTML = exHtml || `<div class="tip">今日暂无运动记录</div>`;
-
-  document.getElementById("aiAdviceShow").innerText = (todayData?.advice)||"暂无";
-  document.getElementById("aiSuggestInput").value = (todayData?.advice)||"";
+  bindWeightInput();
 }
 
 function copyTodayLog(){
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const allRecords = getAllRecords();
   const dayData = allRecords[dayKey];
   if(!dayData || !Array.isArray(dayData.items) || dayData.items.length===0){
-    showMsg("今日还没有记录",false);
+    showMsg("该日期还没有记录",false);
     return;
   }
   const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
@@ -537,7 +552,7 @@ function copyTodayLog(){
 
 function saveAiAdvice(){
   const text = document.getElementById("aiSuggestInput").value.trim();
-  const dayKey = getTodayStr();
+  const dayKey = getSelectedDateStr();
   const allRecords = getAllRecords();
   if(!allRecords[dayKey]) allRecords[dayKey]={items:[],exercises:[],advice:"",wMorning:"",wNight:""};
   allRecords[dayKey].advice = text;
@@ -571,7 +586,7 @@ function showDayDetail(dayStr){
         dayData.exercises.forEach(ex=>info += `${ex.name}｜${ex.burn}kcal<br/>`)
       }
     }
-    info += `📭今日暂无饮食记录`;
+    info += `📭该日暂无饮食记录`;
     detailBox.innerHTML = info;
     detailBox.style.display = "block";
     return;
@@ -608,7 +623,17 @@ function showDayDetail(dayStr){
   detailBox.style.display = "block";
 }
 
+// 页面初始化
 document.getElementById("monthPicker").addEventListener("change",renderMonth);
+// 补录日期切换事件，切换自动加载那天的体重、运动、统计
+document.getElementById("recordDatePicker").addEventListener("change",bindWeightInput);
+
+// 初始化默认选中今天
+function initDatePicker(){
+  const today = getTodayStr();
+  document.getElementById("recordDatePicker").value = today;
+}
+initDatePicker();
 renderMonth();
 </script>
 </body>
