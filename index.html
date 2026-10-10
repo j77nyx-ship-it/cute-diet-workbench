@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🍡我的减脂小工作台</title>
+<style>
+*{box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
+body{
+  background:#fff7fb;
+  max-width:720px;
+  margin:16px auto;
+  padding:14px;
+  color:#443344;
+}
+.card{
+  background:#ffffff;
+  border-radius:22px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 3px 10px #ffd6e888;
+  border:2px solid #ffe6f2;
+}
+h1{text-align:center;color:#dd6699;font-size:22px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;}
+select,input,textarea{
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid #ffbcd9;
+  font-size:15px;
+  flex:1;
+  min-width:110px;
+}
+button{
+  background:#ff88bb;
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:14px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{background:#ff66aa;}
+.month-selector{text-align:center;margin:12px 0;}
+.day-item{
+  background:#fff0f7;
+  border-radius:16px;
+  padding:12px;
+  margin:10px 0;
+}
+.meal-item{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:8px 6px;
+  border-bottom:1px dashed #ffd6e8;
+}
+.food‑illust{font-size:34px;}
+.stat{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:8px;
+  margin:10px 0;
+}
+.stat>div{
+  background:#ffe6f2;
+  border-radius:12px;
+  text-align:center;
+  padding:8px 4px;
+  font-size:13px;
+}
+.tip{font-size:13px;color:#995577;}
+</style>
+</head>
+<body>
+<h1>🍡减脂饮食小工作台</h1>
+
+<div class="card">
+  <div class="stat">
+    <div>三餐目标<br/>800‑1000 kcal</div>
+    <div>零食上限<br/>150 kcal</div>
+    <div>蛋白最低<br/>70g/天</div>
+    <div>多囊小记✨</div>
+  </div>
+
+  <div class="row">
+    <select id="mealType">
+      <option value="breakfast">🌞早餐</option>
+      <option value="lunch">☀️午餐</option>
+      <option value="dinner">🌙晚餐</option>
+      <option value="snack">🍬加餐/零食</option>
+    </select>
+    <input id="foodInput" placeholder="输入食物，例如：鸡蛋1个，白米饭小半碗"/>
+  </div>
+  <textarea id="weightHint" placeholder="补充分量描述（可选）" rows="2"></textarea>
+  <div class="row" style="margin-top:10px;">
+    <button onclick="addFoodRecord()">➕添加记录（自动估算营养）</button>
+    <button onclick="clearToday()">🗑清空今日</button>
+  </div>
+  <div class="tip">说明：为估算值，供减脂参考，不作为医疗标准</div>
+</div>
+
+<div class="card month-selector">
+  <label>📅选择月份查看历史：</label>
+  <input type="month" id="monthPicker"/>
+</div>
+
+<div id="historyContainer"></div>
+
+<script>
+// 食物匹配插画与简易营养库
+const foodMeta = [
+  {kw:["鸡蛋"],illust:"🍳",kcal:70,pro:6,cho:0.6,fat:5},
+  {kw:["烧麦"],illust:"🥟",kcal:100,pro:3,cho:16,fat:3},
+  {kw:["香肠"],illust:"🌭",kcal:80,pro:5,cho:1,fat:6},
+  {kw:["牛奶"],illust:"🥛",kcal:120,pro:6,cho:9,fat:6},
+  {kw:["咖啡"],illust:"☕",kcal:5,pro:0,cho:0,fat:0},
+  {kw:["米饭","白米饭"],illust:"🍚",kcal:116,pro:2.6,cho:26,fat:0.3},
+  {kw:["藜麦"],illust:"🌾",kcal:120,pro:4.4,cho:21,fat:1.9},
+  {kw:["鸡胸","鸡胸肉"],illust:"🍗",kcal:110,pro:23,cho:0,fat:2},
+  {kw:["豆腐"],illust:"🧈",kcal:85,pro:8,cho:3,fat:5},
+  {kw:["鱼","鱼虾"],illust:"🐟",kcal:100,pro:18,cho:0,fat:3},
+  {kw:["番茄","小番茄","黄瓜"],illust:"🥒",kcal:20,pro:1,cho:4,fat:0.2},
+  {kw:["小笼包"],illust:"🥟",kcal:90,pro:3,cho:12,fat:4},
+  {kw:["奶茶","拿铁"],illust:"🧋",kcal:130,pro:3,cho:15,fat:5},
+  {kw:["坚果"],illust:"🌰",kcal:60,pro:2,cho:2,fat:5},
+  {kw:["酸奶"],illust:"🍨",kcal:70,pro:4,cho:8,fat:2},
+  {kw:["面包"],illust:"🍞",kcal:140,pro:4,cho:24,fat:3},
+  {kw:["蔬菜","青菜","菠菜"],illust:"🥬",kcal:25,pro:2,cho:4,fat:0.3},
+];
+
+// 根据文字匹配插画和基础营养
+function parseFood(text){
+  text = text.toLowerCase();
+  let match = foodMeta.find(i=>i.kw.some(k=>text.includes(k)));
+  if(!match) return {illust:"🍽️",kcal:45,pro:1,cho:6,fat:2};
+  return {...match};
+}
+
+// 本地存储
+function getAllRecords(){
+  let raw = localStorage.getItem("dietLog");
+  return raw ? JSON.parse(raw) : {};
+}
+function saveAllRecords(obj){
+  localStorage.setItem("dietLog",JSON.stringify(obj));
+}
+
+// 获取今日 yyyy‑MM‑dd
+function getTodayStr(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=(d.getMonth()+1).toString().padStart(2,"0");
+  const day=d.getDate().toString().padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+// 添加一条记录
+function addFoodRecord(){
+  const foodText = document.getElementById("foodInput").value.trim();
+  const weightText = document.getElementById("weightHint").value.trim();
+  const meal = document.getElementById("mealType").value;
+  if(!foodText){alert("请输入吃了什么");return;}
+  const meta = parseFood(foodText);
+  const dayKey = getTodayStr();
+  const all = getAllRecords();
+  if(!all[dayKey]) all[dayKey] = {items:[]};
+  all[dayKey].items.push({
+    meal,
+    foodText,
+    weightText,
+    ...meta,
+    ts:Date.now()
+  });
+  saveAllRecords(all);
+  document.getElementById("foodInput").value="";
+  document.getElementById("weightHint").value="";
+  renderMonth();
+}
+
+function clearToday(){
+  const dayKey = getTodayStr();
+  const all = getAllRecords();
+  delete all[dayKey];
+  saveAllRecords(all);
+  renderMonth();
+}
+
+// 渲染选择月份
+function renderMonth(){
+  const picker = document.getElementById("monthPicker");
+  if(!picker.value){
+    const now=new Date();
+    picker.value = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,"0")}`;
+  }
+  const selMonth = picker.value;
+  const container = document.getElementById("historyContainer");
+  const all = getAllRecords();
+  const dayKeys = Object.keys(all).filter(d=>d.startsWith(selMonth)).sort();
+  if(dayKeys.length===0){
+    container.innerHTML = `<div class="card"><div style="text-align:center;">📭本月暂无饮食记录</div></div>`;
+    return;
+  }
+  let html="";
+  for(let dk of dayKeys){
+    const dayData = all[dk];
+    const items = dayData.items || [];
+    // 区分三餐 / 零食
+    const threeMeal = items.filter(x=>x.meal!=='snack');
+    const snackItems = items.filter(x=>x.meal==='snack');
+    const sum3 = threeMeal.reduce((s,i)=>{
+      return {
+        kcal:s.kcal+i.kcal,
+        pro:s.pro+i.pro,
+        cho:s.cho+i.cho,
+        fat:s.fat+i.fat
+      }
+    },{kcal:0,pro:0,cho:0,fat:0});
+    const sumSnack = snackItems.reduce((s,i)=>{
+      return {
+        kcal:s.kcal+i.kcal,
+        pro:s.pro+i.pro,
+        cho:s.cho+i.cho,
+        fat:s.fat+i.fat
+      }
+    },{kcal:0,pro:0,cho:0,fat:0});
+    const totalAll = {
+      kcal:sum3.kcal+sumSnack.kcal,
+      pro:sum3.pro+sumSnack.pro,
+      cho:sum3.cho+sumSnack.cho,
+      fat:sum3.fat+sumSnack.fat
+    };
+    html += `<div class="day-item">
+      <div><strong>📆${dk}</strong></div>
+      <div class="stat">
+        <div>三餐：${sum3.kcal} kcal<br/><span class="tip">目标800‑1000</span></div>
+        <div>零食：${sumSnack.kcal} kcal<br/><span class="tip">上限150</span></div>
+        <div>全天：${totalAll.kcal} kcal</div>
+        <div>蛋白：${totalAll.pro.toFixed(1)}g</div>
+      </div>`;
+    for(let it of items){
+      let mealLabel = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"}[it.meal];
+      html += `
+      <div class="meal-item">
+        <div class="food‑illust">${it.illust}</div>
+        <div style="flex:1;">
+          <div>${mealLabel}｜${it.foodText}</div>
+          <div class="tip">${it.weightText||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+document.getElementById("monthPicker").addEventListener("change",renderMonth);
+renderMonth();
+</script>
+</body>
+</html>
