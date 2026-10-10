@@ -163,12 +163,12 @@ button:hover{background:#ff66aa;}
     <div>净摄入<br/><span id="showNetKcal">0</span> kcal</div>
     <div>蛋白合计<br/><span id="showTotalPro">0</span> g</div>
   </div>
-  <div class="stat-row">
+   <div class="stat-row">
     <div>🌅晨起体重(kg)
-      <input type="number" step="0.01" id="morningWeight" placeholder="例如58.0">
+      <input type="text" id="morningWeight" placeholder="例如58.0" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
     </div>
     <div>🌙晚间体重(kg)
-      <input type="number" step="0.01" id="nightWeight" placeholder="例如58.3">
+      <input type="text" id="nightWeight" placeholder="例如58.3" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
     </div>
   </div>
 
