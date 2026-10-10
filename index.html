@@ -15,7 +15,7 @@
   }
   h1 {
     text-align: center;
-    font-size: 24px;
+    font-size: 22px;
     margin: 8px 0 18px;
   }
   .card {
@@ -40,24 +40,22 @@
   }
   .metric strong {
     display: block;
-    font-size: 18px;
+    font-size: 17px;
     margin-top: 4px;
     color: #d63384;
   }
-  .tip {
-    background: #fff0f9;
-    border-left: 4px solid #ff7ac6;
-    padding: 10px 12px;
-    border-radius: 10px;
-    margin: 10px 0;
+  label {
+    display: block;
     font-size: 14px;
+    color: #7a5c72;
+    margin: 12px 0 6px;
   }
   input, select {
     width: 100%;
     padding: 12px;
     border: 2px solid #ffd1e8;
     border-radius: 14px;
-    margin: 8px 0;
+    margin: 6px 0;
     font-size: 16px;
     background: #fff;
     outline: none;
@@ -71,8 +69,7 @@
     border-radius: 14px;
     font-size: 15px;
     cursor: pointer;
-    margin: 6px 4px 6px 0;
-    transition: 0.15s;
+    margin: 10px 6px 6px 0;
   }
   .btn-primary {
     background: linear-gradient(135deg, #ff7ac6, #ff9ed4);
@@ -83,40 +80,25 @@
     background: #eee5ec;
     color: #5c4a58;
   }
-  .btn-danger {
-    background: #ffd9e6;
-    color: #d63384;
-  }
-  .img-preview-wrap{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
-    margin:12px 0;
-  }
-  .img-preview-item{
-    background:#fff0f9;
-    border-radius:14px;
-    padding:10px;
-    text-align:center;
-  }
-  .img-preview-item img{
-    max-width:100%;
-    border-radius:10px;
-  }
   .result-box {
     background: linear-gradient(135deg, #fff0f9, #ffe4f3);
     border-radius: 16px;
     padding: 14px;
-    margin-top: 12px;
+    margin-top: 14px;
   }
   .result-box p {
     margin: 6px 0;
+  }
+  .img-preview {
+    max-width: 240px;
+    border-radius: 14px;
+    margin-top: 10px;
   }
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 14px;
   }
   .cal-day {
     background: #fff0f9;
@@ -174,7 +156,6 @@
     gap: 8px;
   }
   @media (max-width: 520px) {
-    .img-preview-wrap{grid-template-columns:1fr;}
     .row4 { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
@@ -191,57 +172,34 @@
   </div>
 
   <div class="card">
-    <h3>照片与插画</h3>
-    <label>上传实物原图</label>
-    <input type="file" id="imgUploadOriginal" accept="image/*" />
-    <label>上传生成后的手绘插画</label>
-    <input type="file" id="imgUploadIllust" accept="image/*" />
+    <h3>添加记录</h3>
 
-    <div class="img-preview-wrap" id="previewWrap" style="display:none;">
-      <div class="img-preview-item">
-        <div style="font-size:13px;color:#7a5c72;margin-bottom:6px;">实物原图</div>
-        <img id="previewOriginal"/>
-      </div>
-      <div class="img-preview-item">
-        <div style="font-size:13px;color:#7a5c72;margin-bottom:6px;">极简插画</div>
-        <img id="previewIllust"/>
-      </div>
-    </div>
+    <label>上传食物照片</label>
+    <input type="file" id="imgUpload" accept="image/*" />
+    <img id="imgPreview" class="img-preview" style="display:none;" />
 
-    <div class="tip">
-      上传食物照片，自行生成丙烯纸感极简插画，插画上传填入；填写整份总热量、人数自动分摊计算个人摄入。
-    </div>
+    <label>这份总热量（大卡）</label>
+    <input type="number" id="totalKcalInput" placeholder="例如：整锅 800" />
 
-    <label>这份是几个人吃的？</label>
+    <label>几个人吃</label>
     <select id="peopleSel">
-      <option value="1">1人吃（我自己一份）</option>
-      <option value="2">2人分</option>
-      <option value="3" selected>3人分</option>
-      <option value="4">4人分</option>
-      <option value="5">5人分</option>
-      <option value="6">6人分</option>
+      <option value="1">1人</option>
+      <option value="2">2人</option>
+      <option value="3" selected>3人</option>
+      <option value="4">4人</option>
+      <option value="5">5人</option>
+      <option value="6">6人</option>
     </select>
 
-    <label>这一份/一锅总热量大概多少大卡？</label>
-    <input type="number" id="totalKcalInput" placeholder="例：整锅约 800 kcal" />
-
-    <label>这一份/一锅总蛋白质大概多少克？</label>
-    <input type="number" id="totalProInput" placeholder="例：整锅约 50 g" />
-
-    <label>记录名称</label>
-    <input id="foodNameInput" placeholder="例如：黄焖鸡米饭" />
-
     <label>备注（可选）</label>
-    <input id="noteInput" placeholder="例：油比较多，蔬菜少" />
+    <input id="noteInput" placeholder="例如：鸡腿肉，油比较多" />
 
-    <div class="result-box" id="estimateBox">
-      <p>当前：<strong id="peopleShow">3人分</strong></p>
+    <div class="result-box">
       <p>你这一份估算热量：<strong id="onePersonKcal">-- kcal</strong></p>
-      <p>你这一份估算蛋白质：<strong id="onePersonPro">-- g</strong></p>
     </div>
 
     <button class="btn-primary" onclick="addRecord()">添加到当天</button>
-    <button class="btn-gray" onclick="clearDay()">清空当天记录</button>
+    <button class="btn-gray" onclick="clearDay()">清空当天</button>
   </div>
 
   <div class="card">
@@ -255,7 +213,7 @@
 
   <div class="card">
     <h3>日历补录</h3>
-    <div class="legend">绿色800‑1000kcal｜蓝色＜800kcal｜橙色＞1000kcal｜空白无记录</div>
+    <div class="legend">绿色800-1000kcal｜蓝色＜800kcal｜橙色＞1000kcal</div>
     <input type="month" id="monthSel" />
     <div class="calendar-grid" id="calendarBox"></div>
   </div>
@@ -269,20 +227,14 @@
   const DAILY_TARGET = 1000;
   let records = JSON.parse(localStorage.getItem("dietRecords") || "{}");
   let targetDate = new Date().toISOString().slice(0, 10);
-  let originalImgData = null;
-  let illustImgData = null;
+  let imgData = null;
 
   const monthSel = document.getElementById("monthSel");
   const targetDateText = document.getElementById("targetDateText");
-  const imgUploadOriginal = document.getElementById("imgUploadOriginal");
-  const imgUploadIllust = document.getElementById("imgUploadIllust");
-  const previewWrap = document.getElementById("previewWrap");
-  const previewOriginal = document.getElementById("previewOriginal");
-  const previewIllust = document.getElementById("previewIllust");
+  const imgUpload = document.getElementById("imgUpload");
+  const imgPreview = document.getElementById("imgPreview");
   const peopleSel = document.getElementById("peopleSel");
   const totalKcalInput = document.getElementById("totalKcalInput");
-  const totalProInput = document.getElementById("totalProInput");
-  const foodNameInput = document.getElementById("foodNameInput");
   const noteInput = document.getElementById("noteInput");
 
   function init() {
@@ -293,64 +245,42 @@
     renderAll();
   }
 
-  function readImage(file, callback){
+  imgUpload.onchange = function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(ev){
+    reader.onload = function (ev) {
       const img = new Image();
-      img.onload = function(){
+      img.onload = function () {
         const canvas = document.createElement("canvas");
         const maxW = 640;
-        const scale = Math.min(1, maxW/img.width);
-        canvas.width = img.width*scale;
-        canvas.height = img.height*scale;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
         const ctx = canvas.getContext("2d");
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        callback(canvas.toDataURL("image/jpeg",0.75));
-      }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        imgData = canvas.toDataURL("image/jpeg", 0.75);
+        imgPreview.src = imgData;
+        imgPreview.style.display = "inline-block";
+      };
       img.src = ev.target.result;
-    }
+    };
     reader.readAsDataURL(file);
-  }
-
-  imgUploadOriginal.onchange = function(e){
-    const f = e.target.files[0];
-    if(!f) return;
-    readImage(f, (data)=>{
-      originalImgData = data;
-      previewOriginal.src = data;
-      previewWrap.style.display = "grid";
-    })
-  }
-  imgUploadIllust.onchange = function(e){
-    const f = e.target.files[0];
-    if(!f) return;
-    readImage(f, (data)=>{
-      illustImgData = data;
-      previewIllust.src = data;
-      previewWrap.style.display = "grid";
-    })
-  }
+  };
 
   function updateEstimate() {
     const people = parseFloat(peopleSel.value) || 1;
     const totalKcal = parseFloat(totalKcalInput.value) || 0;
-    const totalPro = parseFloat(totalProInput.value) || 0;
-    const oneKcal = totalKcal / people;
-    const onePro = totalPro / people;
-    document.getElementById("peopleShow").textContent = people + "人分";
-    document.getElementById("onePersonKcal").textContent = oneKcal > 0 ? oneKcal.toFixed(0) + " kcal" : "-- kcal";
-    document.getElementById("onePersonPro").textContent = onePro > 0 ? onePro.toFixed(1) + " g" : "-- g";
+    document.getElementById("onePersonKcal").textContent =
+      totalKcal > 0 ? Math.round(totalKcal / people) + " kcal" : "-- kcal";
   }
 
   peopleSel.addEventListener("input", updateEstimate);
   totalKcalInput.addEventListener("input", updateEstimate);
-  totalProInput.addEventListener("input", updateEstimate);
 
   function addRecord() {
     const people = parseFloat(peopleSel.value) || 1;
     const totalKcal = parseFloat(totalKcalInput.value);
-    const totalPro = parseFloat(totalProInput.value) || 0;
-    const foodName = foodNameInput.value.trim();
 
     if (isNaN(totalKcal)) {
       alert("请填写这份总热量");
@@ -358,33 +288,23 @@
     }
 
     const oneKcal = Math.round(totalKcal / people);
-    const onePro = Math.round((totalPro / people) * 10) / 10;
 
     if (!records[targetDate]) records[targetDate] = [];
     records[targetDate].push({
       id: Date.now(),
-      foodName: foodName,
       people: people,
       totalKcal: totalKcal,
-      totalPro: totalPro,
       oneKcal: oneKcal,
-      onePro: onePro,
       note: noteInput.value.trim(),
-      photoOriginal: originalImgData,
-      photoIllust: illustImgData
+      photo: imgData
     });
 
     save();
-    //清空输入
     totalKcalInput.value = "";
-    totalProInput.value = "";
-    foodNameInput.value = "";
     noteInput.value = "";
-    imgUploadOriginal.value = "";
-    imgUploadIllust.value = "";
-    previewWrap.style.display = "none";
-    originalImgData = null;
-    illustImgData = null;
+    imgUpload.value = "";
+    imgPreview.style.display = "none";
+    imgData = null;
     updateEstimate();
     renderAll();
     alert("已添加到 " + targetDate);
@@ -417,12 +337,9 @@
 
   function getDaySum(dayStr) {
     const items = records[dayStr] || [];
-    let kcal = 0, pro = 0;
-    items.forEach(r => {
-      kcal += r.oneKcal || 0;
-      pro += r.onePro || 0;
-    });
-    return { kcal, pro };
+    let kcal = 0;
+    items.forEach(r => kcal += r.oneKcal || 0);
+    return kcal;
   }
 
   function getCalClass(kcal) {
@@ -449,8 +366,8 @@
       const dayStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const sum = getDaySum(dayStr);
       const div = document.createElement("div");
-      div.className = "cal-day " + getCalClass(sum.kcal) + (dayStr === targetDate ? " selected" : "");
-      div.innerHTML = `${d}号<br>${sum.kcal}kcal`;
+      div.className = "cal-day " + getCalClass(sum) + (dayStr === targetDate ? " selected" : "");
+      div.innerHTML = `${d}号<br>${sum}kcal`;
       div.onclick = () => selectDay(dayStr);
       box.appendChild(div);
     }
@@ -464,39 +381,31 @@
       return;
     }
 
-    const sum = getDaySum(targetDate);
-    let html = `<p><strong>${targetDate}</strong>｜今日总热量：${sum.kcal} kcal｜蛋白质：${sum.pro.toFixed(1)} g</p>`;
+    let html = `<p><strong>${targetDate}</strong>｜今日总热量：${getDaySum(targetDate)} kcal</p>`;
 
     items.forEach(r => {
       html += `
         <div class="detail-item">
           <div>
-            <div style="font-size:17px;"><strong>${r.foodName||"未命名记录"}</strong></div>
+            <div><strong>${r.oneKcal} kcal</strong></div>
             <div style="font-size:14px;color:#7a5c72;margin-top:4px;">
-              ${r.people}人分｜整份 ${r.totalKcal}kcal ${r.totalPro?"/ "+r.totalPro+"g蛋白":""}
+              ${r.people}人分｜整份 ${r.totalKcal}kcal
             </div>
-            <div style="font-size:14px;color:#d63384;margin-top:4px;">
-              个人摄入：${r.oneKcal}kcal / ${r.onePro.toFixed(1)}g蛋白
-            </div>
-            ${r.note?`<div style="font-size:13px;color:#7a5c72;margin-top:4px;">${r.note}</div>`:""}
-            <div style="display:flex;gap:8px;">
-              ${r.photoOriginal?`<img src="${r.photoOriginal}">`:""}
-              ${r.photoIllust?`<img src="${r.photoIllust}">`:""}
-            </div>
+            ${r.note ? `<div style="font-size:14px;color:#7a5c72;margin-top:4px;">${r.note}</div>` : ""}
+            ${r.photo ? `<img src="${r.photo}">` : ""}
           </div>
           <button class="trash" onclick="deleteRecord(${r.id})">删除</button>
         </div>`;
     });
+
     box.innerHTML = html;
   }
 
   function renderTopMetrics() {
     const today = new Date().toISOString().slice(0, 10);
-    const sum = getDaySum(today);
-    document.getElementById("todayKcal").textContent = sum.kcal + " kcal";
-    document.getElementById("todayPro").textContent = sum.pro.toFixed(1) + " g";
-    const deficit = DAILY_TARGET - sum.kcal;
-    document.getElementById("deficit").textContent = deficit + " kcal";
+    const kcal = getDaySum(today);
+    document.getElementById("todayKcal").textContent = kcal + " kcal";
+    document.getElementById("deficit").textContent = (DAILY_TARGET - kcal) + " kcal";
   }
 
   function renderAll() {
