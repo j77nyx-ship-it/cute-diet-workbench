@@ -1,106 +1,172 @@
-import streamlit as st
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>多囊饮食体重记录</title>
+    <style>
+        body {font-family: system-ui, sans-serif;max-width:1100px;margin:20px auto;padding:0 20px;}
+        .card {border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:16px;}
+        .row {display:flex;gap:12px;flex-wrap:wrap;margin:8px 0;}
+        input, select {padding:8px;border:1px solid #ccc;border-radius:6px;}
+        button {padding:8px 14px;background:#3b82f6;color:white;border:none;border-radius:6px;cursor:pointer;}
+        button.del {background:#ef4444;}
+        .stat {background:#f0f7ff;padding:12px;border-radius:8px;flex:1;min-width:180px;text-align:center;}
+    </style>
+</head>
+<body>
+    <h1>多囊饮食&体重记录</h1>
 
-# ========== 页面配置（浏览器标签标题） ==========
-st.set_page_config(
-    page_title="多囊饮食记录",
-    page_icon="🍽",
-    layout="wide"
-)
-st.title("🍽多囊饮食&体重记录")
+    <div class="card">
+        <h3>今日体重</h3>
+        <div class="row">
+            <div>
+                <label>晨起体重(kg)</label>
+                <input type="number" step="0.01" id="wMorning">
+            </div>
+            <div>
+                <label>晚间体重(kg)</label>
+                <input type="number" step="0.01" id="wNight">
+            </div>
+        </div>
+    </div>
 
-# ========== 初始化会话存储 ==========
-if "food_list" not in st.session_state:
-    st.session_state.food_list = []
-if "exercise_list" not in st.session_state:
-    st.session_state.exercise_list = []
-if "weight_morning" not in st.session_state:
-    st.session_state.weight_morning = ""
-if "weight_night" not in st.session_state:
-    st.session_state.weight_night = ""
+    <div class="card">
+        <h3>添加饮食记录</h3>
+        <div class="row">
+            <select id="meal">
+                <option>早餐</option>
+                <option>午餐</option>
+                <option>晚餐</option>
+                <option>加餐</option>
+            </select>
+            <input type="text" id="foodName" placeholder="食物名称">
+            <input type="number" id="foodKcal" placeholder="热量kcal" min="0">
+            <input type="number" id="foodPro" placeholder="蛋白g" min="0">
+            <input type="number" id="foodCarb" placeholder="碳水g" min="0">
+            <input type="number" id="foodFat" placeholder="脂肪g" min="0">
+            <button onclick="addFood()">添加食物</button>
+        </div>
+    </div>
 
-# ========== 【1. 早晚体重录入区】 ==========
-st.subheader("⚖️ 今日体重")
-col_w1, col_w2 = st.columns(2)
-with col_w1:
-    st.session_state.weight_morning = st.text_input("🌅 晨起体重(kg)", value=st.session_state.weight_morning)
-with col_w2:
-    st.session_state.weight_night = st.text_input("🌙 晚间体重(kg)", value=st.session_state.weight_night)
+    <div class="card">
+        <h3>运动消耗</h3>
+        <div class="row">
+            <input type="text" id="exName" placeholder="运动名称">
+            <input type="number" id="exKcal" placeholder="消耗热量kcal" min="0">
+            <button onclick="addExercise()">添加运动</button>
+        </div>
+    </div>
 
-# ========== 【2. 食物录入区】 ==========
-st.subheader("🍱 添加饮食记录")
-col1, col2, col3, col4, col5, col6 = st.columns(6)
-with col1:
-    meal = st.selectbox("餐次", ["🌞早餐","☀️午餐","🌙晚餐","🍬加餐"])
-with col2:
-    food_name = st.text_input("食物名称")
-with col3:
-    kcal = st.number_input("热量kcal", min_value=0, value=0)
-with col4:
-    protein = st.number_input("蛋白质g", min_value=0, value=0)
-with col5:
-    carbs = st.number_input("碳水g", min_value=0, value=0)
-with col6:
-    fat = st.number_input("脂肪g", min_value=0, value=0)
+    <div class="card">
+        <h3>今日汇总</h3>
+        <div class="row">
+            <div class="stat"><h4>总摄入热量</h4><div id="totalIntake">0 kcal</div></div>
+            <div class="stat"><h4>运动总消耗</h4><div id="totalEx">0 kcal</div></div>
+            <div class="stat"><h4>净摄入热量</h4><div id="netKcal">0 kcal</div></div>
+        </div>
+        <p>晨起体重：<span id="showMorning">--</span> kg｜晚间体重：<span id="showNight">--</span> kg</p>
+    </div>
 
-if st.button("➕ 添加食物"):
-    st.session_state.food_list.append({
-        "meal": meal,
-        "name": food_name,
-        "kcal": kcal,
-        "protein": protein,
-        "carbs": carbs,
-        "fat": fat
+    <div class="card">
+        <h3>饮食明细</h3>
+        <div id="foodList"></div>
+    </div>
+
+    <div class="card">
+        <h3>运动明细</h3>
+        <div id="exList"></div>
+    </div>
+
+    <button class="del" onclick="clearAll()">清空全部记录</button>
+
+<script>
+// 读取本地存储
+let data = JSON.parse(localStorage.getItem("dietData")) || {
+    weightMorning: "",
+    weightNight: "",
+    foods: [],
+    exercises: []
+};
+
+function save(){
+    localStorage.setItem("dietData", JSON.stringify(data));
+}
+
+// 体重
+function renderWeight(){
+    document.getElementById("wMorning").value = data.weightMorning;
+    document.getElementById("wNight").value = data.weightNight;
+    document.getElementById("showMorning").innerText = data.weightMorning || "--";
+    document.getElementById("showNight").innerText = data.weightNight || "--";
+}
+document.getElementById("wMorning").oninput = e=>{data.weightMorning = e.target.value;save();renderAll();}
+document.getElementById("wNight").oninput = e=>{data.weightNight = e.target.value;save();renderAll();}
+
+// 添加食物
+function addFood(){
+    const meal = document.getElementById("meal").value;
+    const name = document.getElementById("foodName").value;
+    const kcal = Number(document.getElementById("foodKcal").value||0);
+    const pro = Number(document.getElementById("foodPro").value||0);
+    const carb = Number(document.getElementById("foodCarb").value||0);
+    const fat = Number(document.getElementById("foodFat").value||0);
+    data.foods.push({meal,name,kcal,pro,carb,fat});
+    save();renderAll();
+    //清空输入框
+    document.getElementById("foodName").value="";
+    document.getElementById("foodKcal").value="";
+    document.getElementById("foodPro").value="";
+    document.getElementById("foodCarb").value="";
+    document.getElementById("foodFat").value="";
+}
+
+// 添加运动
+function addExercise(){
+    const name = document.getElementById("exName").value;
+    const kcal = Number(document.getElementById("exKcal").value||0);
+    data.exercises.push({name,kcal});
+    save();renderAll();
+    document.getElementById("exName").value="";
+    document.getElementById("exKcal").value="";
+}
+
+// 渲染全部
+function renderAll(){
+    renderWeight();
+    // 计算汇总
+    let totalIntake = data.foods.reduce((s,i)=>s+i.kcal,0);
+    let totalEx = data.exercises.reduce((s,i)=>s+i.kcal,0);
+    let net = totalIntake - totalEx;
+    document.getElementById("totalIntake").innerText = totalIntake + " kcal";
+    document.getElementById("totalEx").innerText = totalEx + " kcal";
+    document.getElementById("netKcal").innerText = net + " kcal";
+
+    // 饮食列表
+    let foodHtml = "";
+    data.foods.forEach((item,idx)=>{
+        foodHtml += `<p>${item.meal}｜${item.name}｜${item.kcal}kcal｜蛋白${item.pro}g｜碳水${item.carb}g｜脂肪${item.fat}g
+        <button onclick="delFood(${idx})">删除</button></p>`
     })
-    st.success("食物记录保存✅")
+    document.getElementById("foodList").innerHTML = foodHtml;
 
-# ========== 【3. 运动消耗录入区】 ==========
-st.subheader("🏃 运动消耗")
-ex_name = st.text_input("运动名称（可选）")
-ex_kcal = st.number_input("消耗热量(kcal)", min_value=0, value=0)
-if st.button("➕ 添加运动"):
-    st.session_state.exercise_list.append({
-        "name": ex_name,
-        "burn": ex_kcal
+    //运动列表
+    let exHtml = "";
+    data.exercises.forEach((item,idx)=>{
+        exHtml += `<p>${item.name}｜消耗 ${item.kcal} kcal <button onclick="delEx(${idx})">删除</button></p>`
     })
-    st.success("运动记录保存✅")
+    document.getElementById("exList").innerHTML = exHtml;
+}
 
-# ========== 【4. 汇总统计（一目了然） ==========
-st.divider()
-st.subheader("📊 今日汇总")
-# 计算总摄入
-total_intake = sum(item["kcal"] for item in st.session_state.food_list)
-total_exercise = sum(item["burn"] for item in st.session_state.exercise_list)
-net_cal = total_intake - total_exercise
+function delFood(idx){data.foods.splice(idx,1);save();renderAll();}
+function delEx(idx){data.exercises.splice(idx,1);save();renderAll();}
+function clearAll(){
+    if(confirm("确定清空今日所有记录？")){
+        data = {weightMorning:"",weightNight:"",foods:[],exercises:[]};
+        save();renderAll();
+    }
+}
 
-col_sum1, col_sum2, col_sum3 = st.columns(3)
-with col_sum1:
-    st.metric(label="🔥总摄入热量", value=f"{total_intake} kcal")
-with col_sum2:
-    st.metric(label="💪运动总消耗", value=f"{total_exercise} kcal")
-with col_sum3:
-    st.metric(label="📉净摄入热量", value=f"{net_cal} kcal")
-
-# 展示体重
-col_wshow1, col_wshow2 = st.columns(2)
-with col_wshow1:
-    st.write(f"🌅晨起体重：{st.session_state.weight_morning} kg")
-with col_wshow2:
-    st.write(f"🌙晚间体重：{st.session_state.weight_night} kg")
-
-# ========== 【5. 明细列表】 ==========
-st.divider()
-st.subheader("📋饮食明细")
-for food in st.session_state.food_list:
-    st.write(f"{food['meal']}｜{food['name']}｜{food['kcal']}kcal｜蛋白{food['protein']}g｜碳水{food['carbs']}g｜脂肪{food['fat']}g")
-
-st.subheader("🏃运动明细")
-for ex in st.session_state.exercise_list:
-    st.write(f"{ex['name']}｜消耗 {ex['burn']} kcal")
-
-# 清空按钮
-if st.button("🗑️清空今日全部记录"):
-    st.session_state.food_list = []
-    st.session_state.exercise_list = []
-    st.session_state.weight_morning = ""
-    st.session_state.weight_night = ""
-    st.rerun()
+renderAll();
+</script>
+</body>
+</html>
