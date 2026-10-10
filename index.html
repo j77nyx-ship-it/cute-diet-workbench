@@ -78,10 +78,11 @@ button:hover{background:#ff66aa;}
 }
 .calendar-day{
   border-radius:12px;
-  padding:8px 4px;
+  padding:6px 2px;
   text-align:center;
   cursor:pointer;
-  font-size:13px;
+  font-size:11px;
+  line-height:1.2;
 }
 .calendar-day:hover{filter:brightness(0.95);}
 .cal-empty{background:#ffe6f2;}
@@ -201,7 +202,7 @@ button:hover{background:#ff66aa;}
     <button onclick="clearToday()">🗑清空今日全部</button>
     <button onclick="exportJson()">💾导出备份</button>
   </div>
-  <div class="tip">✅使用方法：复制【食物｜热量｜蛋白｜碳水｜脂肪】粘贴到上方食物框，自动填入营养，数值可手动修改。每条记录支持单独删除，可上传餐食照片，回看时有缩略图。</div>
+  <div class="tip">✅使用方法：复制【食物｜热量｜蛋白｜碳水｜脂肪】粘贴到上方食物框，自动填入营养，数值可手动修改。每条记录支持单独删除，可上传餐食照片，回看时有缩略图。<br>⚠️体重输入完成，点击页面空白处保存。</div>
 
   <hr style="margin:16px 0;border:1px dashed #ffcce0;">
   <h4>🏃运动消耗记录</h4>
@@ -234,7 +235,7 @@ button:hover{background:#ff66aa;}
   <label>📅选择月份查看：</label>
   <input type="month" id="monthPicker"/>
   <div style="font-size:13px;margin:6px 0;text-align:center;">
-    🟢正常800-1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录
+    🟢正常800‑1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录
   </div>
   <div class="calendar-grid" id="calendarBox"></div>
   <div class="day-detail" id="dayDetailBox"></div>
@@ -336,7 +337,6 @@ function bindWeightInput(){
   const dayKey = getTodayStr();
   const all = getAllRecords();
   if(!all[dayKey]) all[dayKey]={items:[],exercises:[],advice:"",wMorning:"",wNight:""};
-
   document.getElementById("morningWeight").value = all[dayKey].wMorning||"";
   document.getElementById("nightWeight").value = all[dayKey].wNight||"";
 }
@@ -477,8 +477,11 @@ function renderMonth(){
     const dayData = allRecords[dayStr];
     const dayTotal = getDayTotal(dayData);
     const cls = getCalClass(dayTotal.kcal);
+
+    let wm = (dayData?.wMorning) || "-";
+    let wn = (dayData?.wNight) || "-";
     calHtml += `<div class="calendar-day ${cls}" onclick="showDayDetail('${dayStr}')">
-      ${d}号<br/>${dayTotal.kcal}kcal
+      ${d}号<br/>${dayTotal.kcal}kcal<br/>🌅${wm} 🌙${wn}
     </div>`
   }
   calendarBox.innerHTML = calHtml;
