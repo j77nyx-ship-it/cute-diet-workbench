@@ -2,116 +2,152 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>多囊饮食体重记录</title>
+    <meta name="viewport" content="width=device-width, initial‑scale=1.0">
+    <title>饮食记账</title>
     <style>
-        body {font-family: system-ui, sans-serif;max-width:1100px;margin:20px auto;padding:0 20px;}
-        .card {border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:16px;}
-        .row {display:flex;gap:12px;flex-wrap:wrap;margin:8px 0;}
-        input, select {padding:8px;border:1px solid #ccc;border-radius:6px;}
-        button {padding:8px 14px;background:#3b82f6;color:white;border:none;border-radius:6px;cursor:pointer;}
-        button.del {background:#ef4444;}
-        .stat {background:#f0f7ff;padding:12px;border-radius:8px;flex:1;min-width:180px;text-align:center;}
+        * {box-sizing: border-box;margin:0;padding:0;}
+        body {font-family: system-ui, sans-serif;padding:14px;max-width:960px;margin:0 auto;background:#f8f9fa;}
+        .box {background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #e9ecef;}
+        .row {display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;align-items:center;}
+        input,select {padding:9px 10px;border:1px solid #ced4da;border-radius:8px;font-size:15px;}
+        button {padding:9px 14px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:15px;cursor:pointer;}
+        button.del {background:#dc2626;}
+        .stat-wrap {display:flex;gap:10px;flex-wrap:wrap;}
+        .stat-item {flex:1;min-width:140px;background:#eff6ff;text-align:center;padding:14px;border-radius:10px;}
+        .stat-item h4 {margin-bottom:4px;color:#1e40af;}
+        .tip-ok {color:#16a34a;padding:6px 0;font-size:14px;height:22px;}
+        .item-line {padding:8px 0;border-bottom:1px solid #f1f1f1;}
     </style>
 </head>
 <body>
-    <h1>多囊饮食&体重记录</h1>
+<h1>🍽饮食记账</h1>
 
-    <div class="card">
-        <h3>今日体重</h3>
-        <div class="row">
-            <div>
-                <label>晨起体重(kg)</label>
-                <input type="number" step="0.01" id="wMorning">
-            </div>
-            <div>
-                <label>晚间体重(kg)</label>
-                <input type="number" step="0.01" id="wNight">
-            </div>
+<!-- ==========【1.顶部汇总：体重+热量，一眼看到】 ========== -->
+<div class="box">
+    <h3>📊今日汇总</h3>
+    <div class="stat-wrap">
+        <div class="stat-item">
+            <h4>总摄入热量</h4>
+            <div id="totalIntake">0 kcal</div>
+        </div>
+        <div class="stat-item">
+            <h4>运动消耗</h4>
+            <div id="totalBurn">0 kcal</div>
+        </div>
+        <div class="stat-item">
+            <h4>净摄入</h4>
+            <div id="netCal">0 kcal</div>
         </div>
     </div>
-
-    <div class="card">
-        <h3>添加饮食记录</h3>
-        <div class="row">
-            <select id="meal">
-                <option>早餐</option>
-                <option>午餐</option>
-                <option>晚餐</option>
-                <option>加餐</option>
-            </select>
-            <input type="text" id="foodName" placeholder="食物名称">
-            <input type="number" id="foodKcal" placeholder="热量kcal" min="0">
-            <input type="number" id="foodPro" placeholder="蛋白g" min="0">
-            <input type="number" id="foodCarb" placeholder="碳水g" min="0">
-            <input type="number" id="foodFat" placeholder="脂肪g" min="0">
-            <button onclick="addFood()">添加食物</button>
+    <div class="row" style="margin-top:12px;">
+        <div>
+            <label>🌅晨起体重(kg)</label>
+            <input type="number" step="0.01" id="wMorning" placeholder="例如 58.00">
+        </div>
+        <div>
+            <label>🌙晚间体重(kg)</label>
+            <input type="number" step="0.01" id="wNight" placeholder="例如 58.20">
         </div>
     </div>
-
-    <div class="card">
-        <h3>运动消耗</h3>
-        <div class="row">
-            <input type="text" id="exName" placeholder="运动名称">
-            <input type="number" id="exKcal" placeholder="消耗热量kcal" min="0">
-            <button onclick="addExercise()">添加运动</button>
-        </div>
+    <div style="margin-top:6px;">
+        <span>已填：晨起 <span id="dispMorning">--</span> kg | 晚间 <span id="dispNight">--</span> kg</span>
     </div>
+</div>
 
-    <div class="card">
-        <h3>今日汇总</h3>
-        <div class="row">
-            <div class="stat"><h4>总摄入热量</h4><div id="totalIntake">0 kcal</div></div>
-            <div class="stat"><h4>运动总消耗</h4><div id="totalEx">0 kcal</div></div>
-            <div class="stat"><h4>净摄入热量</h4><div id="netKcal">0 kcal</div></div>
-        </div>
-        <p>晨起体重：<span id="showMorning">--</span> kg｜晚间体重：<span id="showNight">--</span> kg</p>
+<!-- ==========【2.饮食录入（原有逻辑，删掉alert，改用页面提示】 ========== -->
+<div class="box">
+    <h3>添加饮食</h3>
+    <div class="row">
+        <select id="selMeal">
+            <option value="breakfast">早餐</option>
+            <option value="lunch">午餐</option>
+            <option value="dinner">晚餐</option>
+            <option value="snack">加餐</option>
+        </select>
+        <input type="text" id="foodName" placeholder="食物名称">
+        <input type="number" id="foodKcal" placeholder="热量kcal" min="0">
+        <input type="number" id="foodPro" placeholder="蛋白g" min="0">
+        <input type="number" id="foodCarb" placeholder="碳水g" min="0">
+        <input type="number" id="foodFat" placeholder="脂肪g" min="0">
+        <button onclick="addFood()">添加</button>
     </div>
+    <div class="tip-ok" id="msgFood"></div>
+</div>
 
-    <div class="card">
-        <h3>饮食明细</h3>
-        <div id="foodList"></div>
+<!-- ==========【3.运动消耗录入】 ========== -->
+<div class="box">
+    <h3>🏃运动记录</h3>
+    <div class="row">
+        <input type="text" id="exName" placeholder="运动名称">
+        <input type="number" id="exBurn" placeholder="消耗热量kcal" min="0">
+        <button onclick="addExercise()">添加运动</button>
     </div>
+    <div class="tip-ok" id="msgEx"></div>
+</div>
 
-    <div class="card">
-        <h3>运动明细</h3>
-        <div id="exList"></div>
-    </div>
+<!-- ==========【4.明细列表】 ========== -->
+<div class="box">
+    <h3>饮食明细</h3>
+    <div id="foodList"></div>
+</div>
 
-    <button class="del" onclick="clearAll()">清空全部记录</button>
+<div class="box">
+    <h3>运动明细</h3>
+    <div id="exList"></div>
+</div>
+
+<div class="row">
+    <button onclick="exportJson()">导出备份JSON</button>
+    <button class="del" onclick="clearAll()">清空全部数据</button>
+</div>
 
 <script>
-// 读取本地存储
-let data = JSON.parse(localStorage.getItem("dietData")) || {
+// 数据结构
+let appData = JSON.parse(localStorage.getItem("dietAppData")) || {
     weightMorning: "",
     weightNight: "",
     foods: [],
     exercises: []
 };
 
-function save(){
-    localStorage.setItem("dietData", JSON.stringify(data));
+// 持久化保存
+function saveStorage(){
+    localStorage.setItem("dietAppData", JSON.stringify(appData));
 }
 
-// 体重
-function renderWeight(){
-    document.getElementById("wMorning").value = data.weightMorning;
-    document.getElementById("wNight").value = data.weightNight;
-    document.getElementById("showMorning").innerText = data.weightMorning || "--";
-    document.getElementById("showNight").innerText = data.weightNight || "--";
-}
-document.getElementById("wMorning").oninput = e=>{data.weightMorning = e.target.value;save();renderAll();}
-document.getElementById("wNight").oninput = e=>{data.weightNight = e.target.value;save();renderAll();}
+// 体重双向绑定
+document.getElementById("wMorning").oninput = e=>{
+    appData.weightMorning = e.target.value.trim();
+    saveStorage(); renderUi();
+};
+document.getElementById("wNight").oninput = e=>{
+    appData.weightNight = e.target.value.trim();
+    saveStorage(); renderUi();
+};
 
-// 添加食物
+// 添加食物，无alert，页面文字提示
 function addFood(){
-    const meal = document.getElementById("meal").value;
-    const name = document.getElementById("foodName").value;
+    const mealMap = {breakfast:"早餐",lunch:"午餐",dinner:"晚餐",snack:"加餐"};
+    const mealKey = document.getElementById("selMeal").value;
+    const name = document.getElementById("foodName").value.trim();
     const kcal = Number(document.getElementById("foodKcal").value||0);
     const pro = Number(document.getElementById("foodPro").value||0);
     const carb = Number(document.getElementById("foodCarb").value||0);
     const fat = Number(document.getElementById("foodFat").value||0);
-    data.foods.push({meal,name,kcal,pro,carb,fat});
-    save();renderAll();
+
+    if(!name){
+        document.getElementById("msgFood").innerText="⚠️请填写食物名称";
+        setTimeout(()=>document.getElementById("msgFood").innerText="",2200);
+        return;
+    }
+    appData.foods.push({
+        mealText: mealMap[mealKey],
+        name, kcal, pro, carb, fat
+    });
+    saveStorage(); renderUi();
+    document.getElementById("msgFood").innerText="✅已添加食物";
+    setTimeout(()=>document.getElementById("msgFood").innerText="",2200);
+
     //清空输入框
     document.getElementById("foodName").value="";
     document.getElementById("foodKcal").value="";
@@ -122,51 +158,83 @@ function addFood(){
 
 // 添加运动
 function addExercise(){
-    const name = document.getElementById("exName").value;
-    const kcal = Number(document.getElementById("exKcal").value||0);
-    data.exercises.push({name,kcal});
-    save();renderAll();
-    document.getElementById("exName").value="";
-    document.getElementById("exKcal").value="";
-}
-
-// 渲染全部
-function renderAll(){
-    renderWeight();
-    // 计算汇总
-    let totalIntake = data.foods.reduce((s,i)=>s+i.kcal,0);
-    let totalEx = data.exercises.reduce((s,i)=>s+i.kcal,0);
-    let net = totalIntake - totalEx;
-    document.getElementById("totalIntake").innerText = totalIntake + " kcal";
-    document.getElementById("totalEx").innerText = totalEx + " kcal";
-    document.getElementById("netKcal").innerText = net + " kcal";
-
-    // 饮食列表
-    let foodHtml = "";
-    data.foods.forEach((item,idx)=>{
-        foodHtml += `<p>${item.meal}｜${item.name}｜${item.kcal}kcal｜蛋白${item.pro}g｜碳水${item.carb}g｜脂肪${item.fat}g
-        <button onclick="delFood(${idx})">删除</button></p>`
-    })
-    document.getElementById("foodList").innerHTML = foodHtml;
-
-    //运动列表
-    let exHtml = "";
-    data.exercises.forEach((item,idx)=>{
-        exHtml += `<p>${item.name}｜消耗 ${item.kcal} kcal <button onclick="delEx(${idx})">删除</button></p>`
-    })
-    document.getElementById("exList").innerHTML = exHtml;
-}
-
-function delFood(idx){data.foods.splice(idx,1);save();renderAll();}
-function delEx(idx){data.exercises.splice(idx,1);save();renderAll();}
-function clearAll(){
-    if(confirm("确定清空今日所有记录？")){
-        data = {weightMorning:"",weightNight:"",foods:[],exercises:[]};
-        save();renderAll();
+    const exName = document.getElementById("exName").value.trim();
+    const burnVal = Number(document.getElementById("exBurn").value||0);
+    if(!exName){
+        document.getElementById("msgEx").innerText="⚠️填写运动名称";
+        setTimeout(()=>document.getElementById("msgEx").innerText="",2200);
+        return;
     }
+    appData.exercises.push({name:exName, burn:burnVal});
+    saveStorage(); renderUi();
+    document.getElementById("msgEx").innerText="✅运动已记录";
+    setTimeout(()=>document.getElementById("msgEx").innerText="",2200);
+
+    document.getElementById("exName").value="";
+    document.getElementById("exBurn").value="";
 }
 
-renderAll();
+// 删除食物
+function delFood(idx){
+    appData.foods.splice(idx,1); saveStorage(); renderUi();
+}
+// 删除运动
+function delEx(idx){
+    appData.exercises.splice(idx,1); saveStorage(); renderUi();
+}
+
+// 渲染全部界面
+function renderUi(){
+    //回写体重输入框
+    document.getElementById("wMorning").value = appData.weightMorning;
+    document.getElementById("wNight").value = appData.weightNight;
+    document.getElementById("dispMorning").innerText = appData.weightMorning||"--";
+    document.getElementById("dispNight").innerText = appData.weightNight||"--";
+
+    //热量计算
+    const totalIn = appData.foods.reduce((sum,item)=>sum+Number(item.kcal), 0);
+    const totalBurn = appData.exercises.reduce((sum,item)=>sum+Number(item.burn),0);
+    const net = totalIn - totalBurn;
+
+    document.getElementById("totalIntake").innerText = `${totalIn} kcal`;
+    document.getElementById("totalBurn").innerText = `${totalBurn} kcal`;
+    document.getElementById("netCal").innerText = `${net} kcal`;
+
+    //渲染饮食列表
+    let foodHtml = "";
+    appData.foods.forEach((it,i)=>{
+        foodHtml += `<div class="item-line">${it.mealText}｜${it.name}｜${it.kcal}kcal｜蛋白${it.pro}g 碳水${it.carb}g 脂肪${it.fat}g
+        <button style="margin-left:8px;padding:4px 8px;font-size:12px;background:#888" onclick="delFood(${i})">删除</button></div>`;
+    });
+    document.getElementById("foodList").innerHTML = foodHtml || "<div style='padding:8px;color:#888'>暂无饮食记录</div>";
+
+    //渲染运动列表
+    let exHtml = "";
+    appData.exercises.forEach((it,i)=>{
+        exHtml += `<div class="item-line">${it.name}｜消耗 ${it.burn} kcal
+        <button style="margin-left:8px;padding:4px 8px;font-size:12px;background:#888" onclick="delEx(${i})">删除</button></div>`;
+    });
+    document.getElementById("exList").innerHTML = exHtml || "<div style='padding:8px;color:#888'>暂无运动记录</div>";
+}
+
+//导出备份json
+function exportJson(){
+    const blob = new Blob([JSON.stringify(appData,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "饮食记账备份.json";
+    a.click();
+}
+
+//清空全部
+function clearAll(){
+    if(!confirm("确定清空全部记录？建议先导出备份！")) return;
+    appData = {weightMorning:"",weightNight:"",foods:[],exercises:[]};
+    saveStorage(); renderUi();
+}
+
+//页面打开立刻渲染
+renderUi();
 </script>
 </body>
 </html>
