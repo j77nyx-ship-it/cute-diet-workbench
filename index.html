@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍡减脂饮食小工作台（支持补录历史日期）</title>
+<title>减脂饮食小工作台（支持补录历史日期）</title>
 <style>
 *{box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
 body{
@@ -70,12 +70,24 @@ button:hover{background:#ff66aa;}
 .msg-success{background:#d4edda;color:#155724;}
 .msg-warn{background:#fff3cd;color:#856404;}
 
-/* 修改日历：格子加大，去掉emoji，字体适度 */
+/* 日历样式 */
 .calendar-grid{
   display:grid;
   grid-template-columns: repeat(7, 1fr);
   gap:10px;
   margin-top:12px;
+}
+.calendar-week-header{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:10px;
+  margin-bottom:6px;
+}
+.week-label{
+  text-align:center;
+  font-size:14px;
+  font-weight:bold;
+  color:#664466;
 }
 .calendar-day{
   border-radius:12px;
@@ -157,12 +169,12 @@ button:hover{background:#ff66aa;}
 </style>
 </head>
 <body>
-<h1>💄减脂饮食小工作台</h1>
+<h1>减脂饮食小工作台</h1>
 
 <div class="card">
   <!-- ==========新增：补录日期选择器========== -->
   <div class="row">
-    <label>📝录入日期（可补录历史）</label>
+    <label>录入日期（可补录历史）</label>
     <input type="date" id="recordDatePicker">
   </div>
 
@@ -200,39 +212,39 @@ button:hover{background:#ff66aa;}
   </div>
 
   <div class="photo-area">
-    <button onclick="document.getElementById('uploadPhoto').click()">🖼上传餐食照片</button>
+    <button onclick="document.getElementById('uploadPhoto').click()">上传餐食照片</button>
     <input type="file" id="uploadPhoto" accept="image/*" onchange="handlePhoto(event)" style="display:none;">
     <div id="previewBox"></div>
   </div>
 
   <div class="row" style="margin-top:10px;">
-    <button onclick="addFoodRecord()">➕添加记录</button>
-    <button onclick="clearToday()">🗑清空【当前选中日期】全部</button>
-    <button onclick="exportJson()">💾导出备份</button>
+    <button onclick="addFoodRecord()">添加记录</button>
+    <button onclick="clearToday()">清空【当前选中日期】全部</button>
+    <button onclick="exportJson()">导出备份</button>
   </div>
   <div class="tip">✅使用方法：顶部【录入日期】选择要补录的那天，再填食物/体重；输入体重后点空白保存。<br>⚠️定期导出备份json，清浏览器缓存会丢数据</div>
 
   <hr style="margin:16px 0;border:1px dashed #ffcce0;">
-  <h4>🏃运动消耗记录</h4>
+  <h4>运动消耗记录</h4>
   <div class="row">
     <input id="exNameInput" placeholder="运动名称">
     <input type="number" id="exBurnInput" placeholder="消耗热量kcal" min="0">
-    <button onclick="addExercise()">➕添加运动</button>
+    <button onclick="addExercise()">添加运动</button>
   </div>
   <div id="todayExerciseList"></div>
 </div>
 
 <div class="card">
-  <h3>🤖饮食AI助手</h3>
+  <h3>饮食AI助手</h3>
   <div class="tip">点击【复制今日记录】，把文本发给豆包，拿到建议再粘贴回来</div>
   <div class="row">
-    <button onclick="copyTodayLog()">📋复制【当前选中日期】全部记录</button>
+    <button onclick="copyTodayLog()">复制【当前选中日期】全部记录</button>
   </div>
   <div class="ai-box">
     <label>粘贴AI返回的饮食建议到这里保存：</label>
     <textarea id="aiSuggestInput" style="width:100%;height:120px;"></textarea>
     <div class="row">
-      <button onclick="saveAiAdvice()">✅保存到当前选中日期</button>
+      <button onclick="saveAiAdvice()">保存到当前选中日期</button>
     </div>
     <div>当日保存的建议：</div>
     <div class="ai-result" id="aiAdviceShow">暂无</div>
@@ -240,10 +252,20 @@ button:hover{background:#ff66aa;}
 </div>
 
 <div class="card month-selector">
-  <label>📅选择月份查看：</label>
+  <label>选择月份查看：</label>
   <input type="month" id="monthPicker"/>
   <div style="font-size:13px;margin:6px 0;text-align:center;">
-    🟢正常800‑1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录
+    绿色正常800‑1000｜蓝色偏少＜800｜橙色超标＞1000｜粉色无记录
+  </div>
+  <!-- 星期表头，和格子对齐：日 一 二 三 四 五 六 -->
+  <div class="calendar-week-header" id="weekHeader">
+    <div class="week-label">日</div>
+    <div class="week-label">一</div>
+    <div class="week-label">二</div>
+    <div class="week-label">三</div>
+    <div class="week-label">四</div>
+    <div class="week-label">五</div>
+    <div class="week-label">六</div>
   </div>
   <div class="calendar-grid" id="calendarBox"></div>
   <div class="day-detail" id="dayDetailBox"></div>
@@ -360,7 +382,7 @@ function bindWeightInput(){
   if(all[dayKey] && Array.isArray(all[dayKey].exercises)){
     all[dayKey].exercises.forEach((ex,idx)=>{
       exHtml += `<div class="ex-item">${ex.name}｜消耗 ${ex.burn} kcal
-      <button class="btn-del" onclick="deleteExercise(${idx})">❌删除</button></div>`
+      <button class="btn-del" onclick="deleteExercise(${idx})">删除</button></div>`
     })
   }
   document.getElementById("todayExerciseList").innerHTML = exHtml || `<div class="tip">该日暂无运动记录</div>`;
@@ -415,7 +437,7 @@ function addFoodRecord(){
 
   renderMonth();
   bindWeightInput();
-  showMsg("✅记录保存成功");
+  showMsg("记录保存成功");
 }
 
 function addExercise(){
@@ -436,7 +458,7 @@ function addExercise(){
   document.getElementById("exBurnInput").value="";
   renderMonth();
   bindWeightInput();
-  showMsg("✅运动已添加");
+  showMsg("运动已添加");
 }
 
 function deleteExercise(idx){
@@ -467,7 +489,7 @@ function clearToday(){
   saveAllRecords(all);
   renderMonth();
   bindWeightInput();
-  showMsg(`✅【${dayKey}】全部记录清空`);
+  showMsg(`【${dayKey}】全部记录清空`);
 }
 
 function getDayTotal(dayData){
@@ -506,8 +528,16 @@ function renderMonth(){
   const detailBox = document.getElementById("dayDetailBox");
   detailBox.style.display = "none";
 
+  const firstDay = new Date(year, month-1, 1);
+  const firstWeekDay = firstDay.getDay(); // 0=周日
   const daysInMonth = new Date(year, month, 0).getDate();
   let calHtml = "";
+
+  // 空白占位格子，用来对齐1号到正确星期
+  for(let i=0; i<firstWeekDay; i++){
+    calHtml += `<div class="calendar-day" style="visibility:hidden;"></div>`;
+  }
+
   for(let d=1;d<=daysInMonth;d++){
     const dayStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     const dayData = allRecords[dayStr];
@@ -548,7 +578,7 @@ function copyTodayLog(){
   }
 
   navigator.clipboard.writeText(outputText).then(()=>{
-    showMsg("✅已复制记录");
+    showMsg("已复制记录");
   })
 }
 
@@ -560,7 +590,7 @@ function saveAiAdvice(){
   allRecords[dayKey].advice = text;
   saveAllRecords(allRecords);
   renderMonth();
-  showMsg("✅AI建议保存成功");
+  showMsg("AI建议保存成功");
 }
 
 function exportJson(){
@@ -572,7 +602,7 @@ function exportJson(){
   a.download="diet_backup.json";
   a.click();
   URL.revokeObjectURL(url);
-  showMsg("✅备份文件已下载");
+  showMsg("备份文件已下载");
 }
 
 function showDayDetail(dayStr){
@@ -580,15 +610,15 @@ function showDayDetail(dayStr){
   const dayData = allRecords[dayStr];
   const detailBox = document.getElementById("dayDetailBox");
   if(!dayData || !Array.isArray(dayData.items) || dayData.items.length===0){
-    let info = `<strong>📆${dayStr}</strong><br/>`;
+    let info = `<strong>${dayStr}</strong><br/>`;
     if(dayData){
       info += `早：${dayData.wMorning||"无记录"} kg｜晚：${dayData.wNight||"无记录"} kg<br/>`;
       if(Array.isArray(dayData.exercises)&&dayData.exercises.length>0){
-        info += `<br/>🏃运动记录：<br/>`;
+        info += `<br/>运动记录：<br/>`;
         dayData.exercises.forEach(ex=>info += `${ex.name}｜${ex.burn}kcal<br/>`)
       }
     }
-    info += `📭该日暂无饮食记录`;
+    info += `该日暂无饮食记录`;
     detailBox.innerHTML = info;
     detailBox.style.display = "block";
     return;
@@ -596,7 +626,7 @@ function showDayDetail(dayStr){
   const dayTotal = getDayTotal(dayData);
   const mealMap = {breakfast:"早餐",lunch:"午餐",dinner:"晚餐",snack:"加餐"};
 
-  let html = `<strong>📆${dayStr}</strong>  总热量：${dayTotal.kcal} kcal｜运动消耗：${dayTotal.exBurn} kcal｜净摄入：${dayTotal.net} kcal｜蛋白${dayTotal.pro.toFixed(1)}g<br/>`;
+  let html = `<strong>${dayStr}</strong>  总热量：${dayTotal.kcal} kcal｜运动消耗：${dayTotal.exBurn} kcal｜净摄入：${dayTotal.net} kcal｜蛋白${dayTotal.pro.toFixed(1)}g<br/>`;
   html += `<span class="tip">早：${dayData.wMorning||"无记录"} kg｜晚：${dayData.wNight||"无记录"} kg</span>`;
 
   dayData.items.forEach((it,idx)=>{
@@ -607,19 +637,19 @@ function showDayDetail(dayStr){
         <div class="tip">${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
         ${it.photo ? `<img class="photo-img" src="${it.photo}" onclick="openModal('${it.photo}')">` : ""}
       </div>
-      <button class="btn-del" onclick="deleteItem('${dayStr}',${idx})">❌删除</button>
+      <button class="btn-del" onclick="deleteItem('${dayStr}',${idx})">删除</button>
     </div>`
   })
 
   if(Array.isArray(dayData.exercises) && dayData.exercises.length>0){
-    html += `<div style="margin-top:8px;"><strong>🏃当日运动</strong></div>`;
+    html += `<div style="margin-top:8px;"><strong>当日运动</strong></div>`;
     dayData.exercises.forEach((ex)=>{
       html += `<div class="ex-item">${ex.name}｜消耗 ${ex.burn} kcal</div>`
     })
   }
 
   if(dayData.advice){
-    html += `<div style="margin-top:10px;padding:8px;background:#ffeef8;border-radius:10px;"><strong>📌保存的饮食建议：</strong><br>${dayData.advice}</div>`
+    html += `<div style="margin-top:10px;padding:8px;background:#ffeef8;border-radius:10px;"><strong>保存的饮食建议：</strong><br>${dayData.advice}</div>`
   }
   detailBox.innerHTML = html;
   detailBox.style.display = "block";
