@@ -2,450 +2,406 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>饮食记录小本本</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🍡减脂饮食小工作台</title>
 <style>
-  * { box-sizing: border-box; font-family: "Segoe UI", system-ui, sans-serif; }
-  body {
-    background: linear-gradient(135deg, #ffeef8 0%, #fff5fb 100%);
-    padding: 16px;
-    max-width: 820px;
-    margin: 0 auto;
-    color: #4a3b46;
-  }
-  h1 {
-    text-align: center;
-    font-size: 22px;
-    margin: 8px 0 18px;
-  }
-  .card {
-    background: #fff;
-    border-radius: 22px;
-    padding: 18px;
-    margin-bottom: 16px;
-    box-shadow: 0 6px 18px #ffd6e880;
-    border: 2px solid #ffd1e8;
-  }
-  .row4 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .metric {
-    background: #ffe4f3;
-    border-radius: 14px;
-    padding: 12px;
-    text-align: center;
-  }
-  .metric strong {
-    display: block;
-    font-size: 17px;
-    margin-top: 4px;
-    color: #d63384;
-  }
-  label {
-    display: block;
-    font-size: 14px;
-    color: #7a5c72;
-    margin: 12px 0 6px;
-  }
-  input, select {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #ffd1e8;
-    border-radius: 14px;
-    margin: 6px 0;
-    font-size: 16px;
-    background: #fff;
-    outline: none;
-  }
-  input:focus, select:focus {
-    border-color: #ff7ac6;
-  }
-  button {
-    padding: 12px 16px;
-    border: none;
-    border-radius: 14px;
-    font-size: 15px;
-    cursor: pointer;
-    margin: 10px 6px 6px 0;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, #ff7ac6, #ff9ed4);
-    color: white;
-    box-shadow: 0 4px 10px #ff9ed480;
-  }
-  .btn-gray {
-    background: #eee5ec;
-    color: #5c4a58;
-  }
-  .result-box {
-    background: linear-gradient(135deg, #fff0f9, #ffe4f3);
-    border-radius: 16px;
-    padding: 14px;
-    margin-top: 14px;
-  }
-  .result-box p {
-    margin: 6px 0;
-  }
-  .img-preview {
-    max-width: 240px;
-    border-radius: 14px;
-    margin-top: 10px;
-  }
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin-top: 14px;
-  }
-  .cal-day {
-    background: #fff0f9;
-    border-radius: 12px;
-    padding: 10px 4px;
-    text-align: center;
-    font-size: 13px;
-    cursor: pointer;
-    border: 2px solid transparent;
-  }
-  .cal-day:hover {
-    background: #ffe4f3;
-  }
-  .cal-day.selected {
-    background: #ff7ac6;
-    color: white;
-    border-color: #ff7ac6;
-  }
-  .cal-good { background: #dff7e6; }
-  .cal-low { background: #dff0ff; }
-  .cal-over { background: #ffe7cc; }
-  .legend {
-    text-align: center;
-    font-size: 13px;
-    margin: 8px 0;
-    color: #7a5c72;
-  }
-  .detail-item {
-    background: #fff0f9;
-    border-radius: 16px;
-    padding: 14px;
-    margin: 10px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border: 2px solid #ffd1e8;
-  }
-  .detail-item img {
-    max-width: 220px;
-    border-radius: 12px;
-    margin-top: 8px;
-  }
-  .trash {
-    background: #ffd9e6;
-    color: #d63384;
-    border: none;
-    border-radius: 12px;
-    padding: 8px 10px;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  .backup-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  @media (max-width: 520px) {
-    .row4 { grid-template-columns: repeat(2, 1fr); }
-  }
+*{box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
+body{
+  background:#fff7fb;
+  max-width:760px;
+  margin:20px auto;
+  padding:14px;
+  color:#443344;
+}
+.card{
+  background:#ffffff;
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 3px 10px #ffd6e888;
+  border:2px solid #ffe6f2;
+}
+h1{text-align:center;color:#dd6699;font-size:24px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;align-items:center;}
+select,input,textarea{
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid #ffbcd9;
+  font-size:15px;
+  flex:1;
+  min-width:110px;
+}
+button{
+  background:#ff88bb;
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:14px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{background:#ff66aa;}
+.month-selector{text-align:center;margin:12px 0;}
+.tip{font-size:13px;color:#995577;}
+.photo-area{margin-top:12px;}
+#cameraPreview{max-width:100%;border-radius:14px;display:none;}
+.photo-img{max-width:120px;border-radius:8px;margin:4px;}
+
+/* 日历样式 */
+.calendar-grid{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:8px;
+  margin-top:12px;
+}
+.calendar-day{
+  border-radius:12px;
+  padding:8px 4px;
+  text-align:center;
+  cursor:pointer;
+  font-size:13px;
+}
+.calendar-day:hover{filter:brightness(0.95);}
+.calendar-day.active{border:2px solid #ff66aa;}
+/* 日历颜色分类 */
+.cal-empty{background:#ffe6f2;}
+.cal-low{background:#d9edf7;}
+.cal-good{background:#d4edda;}
+.cal-over{background:#ffe6cc;}
+
+.day-detail{
+  margin-top:14px;
+  padding:14px;
+  background:#fff0f7;
+  border-radius:16px;
+  display:none;
+}
+.meal-item{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:10px 6px;
+  border-bottom:1px dashed #ffbbd8;
+}
+.stat{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:8px;
+  margin:10px 0;
+}
+.stat>div{
+  background:#ffe6f2;
+  border-radius:12px;
+  text-align:center;
+  padding:8px 4px;
+  font-size:13px;
+}
+.ai-box{
+  background:#fff0f7;
+  border-radius:16px;
+  padding:14px;
+  margin-top:12px;
+}
+.ai-result{
+  background:#ffffff;
+  padding:12px;
+  border-radius:12px;
+  min-height:100px;
+  margin-top:8px;
+  white-space:pre-wrap;
+}
 </style>
 </head>
-
 <body>
-  <h1>饮食记录小本本</h1>
+<h1>💄减脂饮食小工作台</h1>
 
-  <div class="row4">
-    <div class="metric">当前日期<br><strong id="targetDateText">今天</strong></div>
-    <div class="metric">今日总热量<br><strong id="todayKcal">0 kcal</strong></div>
-    <div class="metric">今日蛋白质<br><strong id="todayPro">0 g</strong></div>
-    <div class="metric">热量差<br><strong id="deficit">-- kcal</strong></div>
+<div class="card">
+  <div class="stat">
+    <div>三餐目标<br/>800‑1000 kcal</div>
+    <div>零食上限<br/>150 kcal</div>
+    <div>蛋白最低<br/>70g/天</div>
+    <div>热量缺口<br/>-- kcal</div>
   </div>
 
-  <div class="card">
-    <h3>添加记录</h3>
-
-    <label>上传食物照片</label>
-    <input type="file" id="imgUpload" accept="image/*" />
-    <img id="imgPreview" class="img-preview" style="display:none;" />
-
-    <label>这份总热量（大卡）</label>
-    <input type="number" id="totalKcalInput" placeholder="例如：整锅 800" />
-
-    <label>几个人吃</label>
-    <select id="peopleSel">
-      <option value="1">1人</option>
-      <option value="2">2人</option>
-      <option value="3" selected>3人</option>
-      <option value="4">4人</option>
-      <option value="5">5人</option>
-      <option value="6">6人</option>
+  <div class="row">
+    <select id="mealType">
+      <option value="breakfast">🌞早餐</option>
+      <option value="lunch">☀️午餐</option>
+      <option value="dinner">🌙晚餐</option>
+      <option value="snack">🍬加餐/零食</option>
     </select>
+    <input id="foodInput" placeholder="食物名称：例：白米饭100g +茭白炒瘦猪肉172g"/>
+  </div>
+  <div class="row">
+    <input style="flex:1" id="kcalInput" placeholder="热量 kcal">
+    <input style="flex:1" id="proInput" placeholder="蛋白质 g">
+    <input style="flex:1" id="choInput" placeholder="碳水 g">
+    <input style="flex:1" id="fatInput" placeholder="脂肪 g">
+  </div>
+  <textarea id="weightHint" placeholder="补充分量备注（可选）" rows="2"></textarea>
 
-    <label>备注（可选）</label>
-    <input id="noteInput" placeholder="例如：鸡腿肉，油比较多" />
+  <!-- 📸拍照打卡模块 -->
+  <div class="photo-area">
+    <button onclick="openCamera()">📸拍照打卡</button>
+    <input type="file" id="uploadPhoto" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
+  </div>
 
-    <div class="result-box">
-      <p>你这一份估算热量：<strong id="onePersonKcal">-- kcal</strong></p>
+  <div class="row" style="margin-top:10px;">
+    <button onclick="addFoodRecord()">➕手动添加记录</button>
+    <button onclick="clearToday()">🗑清空今日</button>
+    <button onclick="exportJson()">💾导出备份</button>
+  </div>
+  <div class="tip">说明：热量营养手动填入；拍好照片，发给AI帮你算，结果粘贴保存。</div>
+</div>
+
+<!-- AI建议模块 -->
+<div class="card">
+  <h3>🤖饮食AI助手</h3>
+  <div class="tip">点击【复制今日记录】，把文本发给豆包，拿到建议再粘贴回来</div>
+  <div class="row">
+    <button onclick="copyTodayLog()">📋复制今日全部记录</button>
+  </div>
+  <div class="ai-box">
+    <label>粘贴AI返回的饮食建议到这里保存：</label>
+    <textarea id="aiSuggestInput" style="width:100%;height:120px;"></textarea>
+    <div class="row">
+      <button onclick="saveAiAdvice()">✅保存今日建议</button>
     </div>
-
-    <button class="btn-primary" onclick="addRecord()">添加到当天</button>
-    <button class="btn-gray" onclick="clearDay()">清空当天</button>
+    <div>今日保存的建议：</div>
+    <div class="ai-result" id="aiAdviceShow">暂无</div>
   </div>
+</div>
 
-  <div class="card">
-    <h3>备份 / 恢复</h3>
-    <div class="backup-row">
-      <button class="btn-primary" onclick="exportData()">导出备份</button>
-      <button class="btn-gray" onclick="document.getElementById('importFile').click()">导入备份</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
-    </div>
+<div class="card month-selector">
+  <label>📅选择月份查看：</label>
+  <input type="month" id="monthPicker"/>
+  <div style="font-size:13px;margin:6px 0;text-align:center;">
+    🟢正常800-1000｜💙偏少＜800｜🟠超标＞1000｜🌸无记录
   </div>
-
-  <div class="card">
-    <h3>日历补录</h3>
-    <div class="legend">绿色800-1000kcal｜蓝色＜800kcal｜橙色＞1000kcal</div>
-    <input type="month" id="monthSel" />
-    <div class="calendar-grid" id="calendarBox"></div>
-  </div>
-
-  <div class="card">
-    <h3>当日明细</h3>
-    <div id="detailBox"></div>
-  </div>
+  <!-- 日历区域，整月每日热量一览 -->
+  <div class="calendar-grid" id="calendarBox"></div>
+  <!-- 选中日期的明细，点击日期才显示 -->
+  <div class="day-detail" id="dayDetailBox"></div>
+</div>
 
 <script>
-  const DAILY_TARGET = 1000;
-  let records = JSON.parse(localStorage.getItem("dietRecords") || "{}");
-  let targetDate = new Date().toISOString().slice(0, 10);
-  let imgData = null;
+// 本地存储
+function getAllRecords(){
+  let raw = localStorage.getItem("dietLog");
+  return raw ? JSON.parse(raw) : {};
+}
+function saveAllRecords(obj){
+  localStorage.setItem("dietLog",JSON.stringify(obj));
+}
 
-  const monthSel = document.getElementById("monthSel");
-  const targetDateText = document.getElementById("targetDateText");
-  const imgUpload = document.getElementById("imgUpload");
-  const imgPreview = document.getElementById("imgPreview");
-  const peopleSel = document.getElementById("peopleSel");
-  const totalKcalInput = document.getElementById("totalKcalInput");
-  const noteInput = document.getElementById("noteInput");
+// 获取当日日期 yyyy-mm-dd
+function getTodayStr(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
 
-  function init() {
+// 拍照相关
+let capturedImageBase64 = "";
+function openCamera(){
+  const input = document.getElementById("uploadPhoto");
+  input.click();
+}
+function handlePhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    capturedImageBase64 = ev.target.result;
+  }
+  reader.readAsDataURL(file);
+}
+
+// 添加记录【全部手动填写，不再自动解析食物库】
+function addFoodRecord(){
+  const foodText = document.getElementById("foodInput").value.trim();
+  const kcal = Number(document.getElementById("kcalInput").value)||0;
+  const pro = Number(document.getElementById("proInput").value)||0;
+  const cho = Number(document.getElementById("choInput").value)||0;
+  const fat = Number(document.getElementById("fatInput").value)||0;
+
+  const weightText = document.getElementById("weightHint").value.trim();
+  const mealSel = document.getElementById("mealType").value;
+  if(!foodText){alert("请输入食物名称");return;}
+
+  const dayKey = getTodayStr();
+  const all = getAllRecords();
+  if(!all[dayKey]) all[dayKey] = {items:[],advice:""};
+
+  all[dayKey].items.push({
+    meal:mealSel,
+    foodText:foodText,
+    weight:weightText,
+    photo:capturedImageBase64,
+    kcal:kcal,
+    pro:pro,
+    cho:cho,
+    fat:fat,
+    ts:Date.now()
+  });
+  saveAllRecords(all);
+  //清空输入框
+  document.getElementById("foodInput").value="";
+  document.getElementById("kcalInput").value="";
+  document.getElementById("proInput").value="";
+  document.getElementById("choInput").value="";
+  document.getElementById("fatInput").value="";
+  document.getElementById("weightHint").value="";
+  capturedImageBase64="";
+  renderMonth();
+  alert("已保存这条记录");
+}
+
+function clearToday(){
+  const dayKey = getTodayStr();
+  const all = getAllRecords();
+  delete all[dayKey];
+  saveAllRecords(all);
+  renderMonth();
+}
+
+// 计算一天总热量总蛋白
+function getDayTotal(dayData){
+  if(!dayData || !dayData.items) return {kcal:0, pro:0};
+  let kcal=0,pro=0;
+  dayData.items.forEach(i=>{
+    kcal += i.kcal;
+    pro += i.pro;
+  })
+  return {kcal,pro};
+}
+
+// 获取日历格子对应的css class
+function getCalClass(kcal){
+  if(kcal === 0) return "cal-empty";
+  if(kcal < 800) return "cal-low";
+  if(kcal <=1000) return "cal-good";
+  return "cal-over";
+}
+
+// 渲染日历（整月所有天数，一眼看每日热量+颜色标记）
+function renderMonth(){
+  const picker = document.getElementById("monthPicker");
+  if(!picker.value){
     const now = new Date();
-    monthSel.value = now.toISOString().slice(0, 7);
-    targetDateText.textContent = targetDate;
-    updateEstimate();
-    renderAll();
+    picker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   }
+  const [year,month] = picker.value.split("-").map(Number);
+  const allRecords = getAllRecords();
+  const calendarBox = document.getElementById("calendarBox");
+  const detailBox = document.getElementById("dayDetailBox");
+  detailBox.style.display = "none";
 
-  imgUpload.onchange = function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function (ev) {
-      const img = new Image();
-      img.onload = function () {
-        const canvas = document.createElement("canvas");
-        const maxW = 640;
-        const scale = Math.min(1, maxW / img.width);
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        imgData = canvas.toDataURL("image/jpeg", 0.75);
-        imgPreview.src = imgData;
-        imgPreview.style.display = "inline-block";
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  function updateEstimate() {
-    const people = parseFloat(peopleSel.value) || 1;
-    const totalKcal = parseFloat(totalKcalInput.value) || 0;
-    document.getElementById("onePersonKcal").textContent =
-      totalKcal > 0 ? Math.round(totalKcal / people) + " kcal" : "-- kcal";
+  // 获取当月总天数
+  const daysInMonth = new Date(year, month, 0).getDate();
+  let calHtml = "";
+  for(let d=1;d<=daysInMonth;d++){
+    const dayStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const dayData = allRecords[dayStr];
+    const dayTotal = getDayTotal(dayData);
+    const cls = getCalClass(dayTotal.kcal);
+    calHtml += `<div class="calendar-day ${cls}" onclick="showDayDetail('${dayStr}')">
+      ${d}号<br/>${dayTotal.kcal}kcal
+    </div>`
   }
+  calendarBox.innerHTML = calHtml;
 
-  peopleSel.addEventListener("input", updateEstimate);
-  totalKcalInput.addEventListener("input", updateEstimate);
+  // 更新顶部【热量缺口】（目标取1000kcal）
+  const todayTotal = getDayTotal(allRecords[getTodayStr()]);
+  const deficit = 1000 - todayTotal.kcal;
+  document.querySelector(".stat>div:nth-child(4)").innerHTML = `热量缺口<br/>${deficit} kcal`;
 
-  function addRecord() {
-    const people = parseFloat(peopleSel.value) || 1;
-    const totalKcal = parseFloat(totalKcalInput.value);
+  //渲染今日保存的AI建议
+  const todayData = allRecords[getTodayStr()];
+  document.getElementById("aiAdviceShow").innerText = (todayData?.advice)||"暂无";
+  document.getElementById("aiSuggestInput").value = (todayData?.advice)||"";
+}
 
-    if (isNaN(totalKcal)) {
-      alert("请填写这份总热量");
-      return;
-    }
-
-    const oneKcal = Math.round(totalKcal / people);
-
-    if (!records[targetDate]) records[targetDate] = [];
-    records[targetDate].push({
-      id: Date.now(),
-      people: people,
-      totalKcal: totalKcal,
-      oneKcal: oneKcal,
-      note: noteInput.value.trim(),
-      photo: imgData
-    });
-
-    save();
-    totalKcalInput.value = "";
-    noteInput.value = "";
-    imgUpload.value = "";
-    imgPreview.style.display = "none";
-    imgData = null;
-    updateEstimate();
-    renderAll();
-    alert("已添加到 " + targetDate);
+//复制今日全部记录文本，发给豆包
+function copyTodayLog(){
+  const dayKey = getTodayStr();
+  const allRecords = getAllRecords();
+  const dayData = allRecords[dayKey];
+  if(!dayData || !dayData.items.length){
+    alert("今日还没有记录");
+    return;
   }
+  const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
+  let outputText = `【${dayKey} 饮食记录，多囊减脂，请帮我点评+给建议】\n`;
+  dayData.items.forEach(it=>{
+    outputText += `${mealMap[it.meal]}：${it.foodText}｜${it.weight||""}\n热量：${it.kcal}kcal，蛋白${it.pro}g，碳水${it.cho}g，脂肪${it.fat}g\n`;
+  })
+  const total = getDayTotal(dayData);
+  outputText += `\n👉今日合计：总热量${total.kcal} kcal，总蛋白${total.pro} g\n`;
+  navigator.clipboard.writeText(outputText).then(()=>{
+    alert("✅已经复制！直接粘贴发给豆包获取饮食建议");
+  })
+}
 
-  function deleteRecord(id) {
-    if (!confirm("删除这条记录吗？")) return;
-    records[targetDate] = records[targetDate].filter(r => r.id !== id);
-    if (records[targetDate].length === 0) delete records[targetDate];
-    save();
-    renderAll();
+//保存AI给的建议
+function saveAiAdvice(){
+  const text = document.getElementById("aiSuggestInput").value.trim();
+  const dayKey = getTodayStr();
+  const allRecords = getAllRecords();
+  if(!allRecords[dayKey]) allRecords[dayKey]={items:[],advice:""};
+  allRecords[dayKey].advice = text;
+  saveAllRecords(allRecords);
+  renderMonth();
+  alert("✅AI建议保存成功");
+}
+
+//导出备份json
+function exportJson(){
+  const all = getAllRecords();
+  const blob = new Blob([JSON.stringify(all,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url;
+  a.download="diet_backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 点击日期，展开当日明细
+function showDayDetail(dayStr){
+  const allRecords = getAllRecords();
+  const dayData = allRecords[dayStr];
+  const detailBox = document.getElementById("dayDetailBox");
+  if(!dayData || !dayData.items || dayData.items.length===0){
+    detailBox.innerHTML = `<strong>${dayStr}</strong><br/>📭今日暂无饮食记录`;
+    detailBox.style.display = "block";
+    return;
   }
-
-  function clearDay() {
-    if (!confirm("清空当天全部记录？")) return;
-    delete records[targetDate];
-    save();
-    renderAll();
+  const dayTotal = getDayTotal(dayData);
+  const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
+  let html = `<strong>📆${dayStr}</strong>  总热量：${dayTotal.kcal} kcal｜蛋白${dayTotal.pro.toFixed(1)}g`;
+  dayData.items.forEach(it=>{
+    html += `
+    <div class="meal-item">
+      <div>
+        <div>${mealMap[it.meal]}｜${it.foodText}</div>
+        <div class="tip">${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
+        ${it.photo ? `<img class="photo-img" src="${it.photo}">` : ""}
+      </div>
+    </div>`
+  })
+  if(dayData.advice){
+    html += `<div style="margin-top:10px;padding:8px;background:#ffeef8;border-radius:10px;"><strong>📌保存的饮食建议：</strong><br>${dayData.advice}</div>`
   }
+  detailBox.innerHTML = html;
+  detailBox.style.display = "block";
+}
 
-  function save() {
-    localStorage.setItem("dietRecords", JSON.stringify(records));
-  }
-
-  function selectDay(dayStr) {
-    targetDate = dayStr;
-    targetDateText.textContent = targetDate;
-    renderAll();
-  }
-
-  function getDaySum(dayStr) {
-    const items = records[dayStr] || [];
-    let kcal = 0;
-    items.forEach(r => kcal += r.oneKcal || 0);
-    return kcal;
-  }
-
-  function getCalClass(kcal) {
-    if (kcal === 0) return "";
-    if (kcal < 800) return "cal-low";
-    if (kcal <= 1000) return "cal-good";
-    return "cal-over";
-  }
-
-  function renderCalendar() {
-    const [y, m] = monthSel.value.split("-").map(Number);
-    const lastDay = new Date(y, m, 0).getDate();
-    const firstWeekDay = new Date(y, m - 1, 1).getDay();
-    const box = document.getElementById("calendarBox");
-    box.innerHTML = "";
-
-    for (let i = 0; i < firstWeekDay; i++) {
-      const empty = document.createElement("div");
-      empty.style.visibility = "hidden";
-      box.appendChild(empty);
-    }
-
-    for (let d = 1; d <= lastDay; d++) {
-      const dayStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      const sum = getDaySum(dayStr);
-      const div = document.createElement("div");
-      div.className = "cal-day " + getCalClass(sum) + (dayStr === targetDate ? " selected" : "");
-      div.innerHTML = `${d}号<br>${sum}kcal`;
-      div.onclick = () => selectDay(dayStr);
-      box.appendChild(div);
-    }
-  }
-
-  function renderDetail() {
-    const box = document.getElementById("detailBox");
-    const items = records[targetDate] || [];
-    if (items.length === 0) {
-      box.innerHTML = `<p>${targetDate} 还没有记录</p>`;
-      return;
-    }
-
-    let html = `<p><strong>${targetDate}</strong>｜今日总热量：${getDaySum(targetDate)} kcal</p>`;
-
-    items.forEach(r => {
-      html += `
-        <div class="detail-item">
-          <div>
-            <div><strong>${r.oneKcal} kcal</strong></div>
-            <div style="font-size:14px;color:#7a5c72;margin-top:4px;">
-              ${r.people}人分｜整份 ${r.totalKcal}kcal
-            </div>
-            ${r.note ? `<div style="font-size:14px;color:#7a5c72;margin-top:4px;">${r.note}</div>` : ""}
-            ${r.photo ? `<img src="${r.photo}">` : ""}
-          </div>
-          <button class="trash" onclick="deleteRecord(${r.id})">删除</button>
-        </div>`;
-    });
-
-    box.innerHTML = html;
-  }
-
-  function renderTopMetrics() {
-    const today = new Date().toISOString().slice(0, 10);
-    const kcal = getDaySum(today);
-    document.getElementById("todayKcal").textContent = kcal + " kcal";
-    document.getElementById("deficit").textContent = (DAILY_TARGET - kcal) + " kcal";
-  }
-
-  function renderAll() {
-    renderCalendar();
-    renderDetail();
-    renderTopMetrics();
-  }
-
-  monthSel.addEventListener("change", renderCalendar);
-
-  function exportData() {
-    const blob = new Blob([JSON.stringify(records, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `diet_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      try {
-        const imported = JSON.parse(e.target.result);
-        if (!confirm("导入将合并记录，同一天数据会覆盖，确定继续吗？")) return;
-        records = { ...records, ...imported };
-        save();
-        renderAll();
-        alert("导入成功");
-      } catch (err) {
-        alert("备份文件解析失败");
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  init();
+//初始化
+document.getElementById("monthPicker").addEventListener("change",renderMonth);
+renderMonth();
 </script>
 </body>
 </html>
