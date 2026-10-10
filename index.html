@@ -60,6 +60,15 @@ button:hover{background:#ff66aa;}
 }
 .modal img{max-width:90%;max-height:90%;border-radius:8px;}
 .modal.show{display:flex;}
+.msg-tip{
+  padding:6px 10px;
+  border-radius:8px;
+  margin:8px 0;
+  font-size:14px;
+  display:none;
+}
+.msg-success{background:#d4edda;color:#155724;}
+.msg-warn{background:#fff3cd;color:#856404;}
 
 .calendar-grid{
   display:grid;
@@ -75,7 +84,6 @@ button:hover{background:#ff66aa;}
   font-size:13px;
 }
 .calendar-day:hover{filter:brightness(0.95);}
-.calendar-day.active{border:2px solid #ff66aa;}
 .cal-empty{background:#ffe6f2;}
 .cal-low{background:#d9edf7;}
 .cal-good{background:#d4edda;}
@@ -135,6 +143,8 @@ button:hover{background:#ff66aa;}
     <div>蛋白最低<br/>70g/天</div>
     <div>热量缺口<br/>-- kcal</div>
   </div>
+
+  <div id="msgBox" class="msg-tip"></div>
 
   <div class="row">
     <select id="mealType">
@@ -200,6 +210,15 @@ button:hover{background:#ff66aa;}
 <script>
 let capturedImageBase64 = "";
 
+//页面提示，代替alert
+function showMsg(text,isSuccess=true){
+  const box = document.getElementById("msgBox");
+  box.innerText = text;
+  box.style.display="block";
+  box.className = isSuccess?"msg-tip msg-success":"msg-tip msg-warn";
+  setTimeout(()=>{box.style.display="none";},1800);
+}
+
 function autoFillNutrition(){
   const text = document.getElementById("foodInput").value.trim();
   if(!text.includes("｜")) return;
@@ -228,15 +247,36 @@ function getTodayStr(){
   return `${y}-${m}-${day}`;
 }
 
-function handlePhoto(e){
+//图片压缩
+function compressImage(file,maxW=1080,quality=0.6){
+  return new Promise((resolve)=>{
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=ev=>{
+      const img=new Image();
+      img.src=ev.target.result;
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        let w=img.width;
+        let h=img.height;
+        if(w>maxW){
+          h=h*(maxW/w);
+          w=maxW;
+        }
+        canvas.width=w;canvas.height=h;
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL("image/jpeg",quality));
+      }
+    }
+  })
+}
+
+async function handlePhoto(e){
   const file = e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    capturedImageBase64 = ev.target.result;
-    document.getElementById("previewBox").innerHTML = `<img src="${capturedImageBase64}" style="max-width:100px;border-radius:8px;">`;
-  }
-  reader.readAsDataURL(file);
+  capturedImageBase64 = await compressImage(file);
+  document.getElementById("previewBox").innerHTML = `<img src="${capturedImageBase64}" style="max-width:100px;border-radius:8px;">`;
 }
 
 function openModal(src){
@@ -255,17 +295,15 @@ function addFoodRecord(){
   const fat = Number(document.getElementById("fatInput").value)||0;
 
   const mealSel = document.getElementById("mealType").value;
-  if(!foodText){alert("请输入食物名称");return;}
+  if(!foodText){
+    showMsg("请输入食物名称",false);
+    return;
+  }
 
   const dayKey = getTodayStr();
   const all = getAllRecords();
-  // 修复：强制保证items一定是数组，旧脏数据会在这里修复
-  if(!all[dayKey]) {
-    all[dayKey] = {items:[],advice:""};
-  }
-  if(!Array.isArray(all[dayKey].items)){
-    all[dayKey].items = [];
-  }
+  if(!all[dayKey]) all[dayKey] = {items:[],advice:""};
+  if(!Array.isArray(all[dayKey].items)) all[dayKey].items = [];
 
   all[dayKey].items.push({
     meal:mealSel,
@@ -286,8 +324,9 @@ function addFoodRecord(){
   document.getElementById("fatInput").value="";
   document.getElementById("previewBox").innerHTML="";
   capturedImageBase64="";
+
   renderMonth();
-  alert("✅已保存这条记录");
+  showMsg("✅记录保存成功");
 }
 
 function deleteItem(dayStr, tsIndex){
@@ -306,6 +345,7 @@ function clearToday(){
   delete all[dayKey];
   saveAllRecords(all);
   renderMonth();
+  showMsg("今日记录已清空");
 }
 
 function getDayTotal(dayData){
@@ -364,7 +404,7 @@ function copyTodayLog(){
   const allRecords = getAllRecords();
   const dayData = allRecords[dayKey];
   if(!dayData || !Array.isArray(dayData.items) || dayData.items.length===0){
-    alert("今日还没有记录");
+    showMsg("今日还没有记录",false);
     return;
   }
   const mealMap = {breakfast:"🌞早餐",lunch:"☀️午餐",dinner:"🌙晚餐",snack:"🍬加餐"};
@@ -375,7 +415,7 @@ function copyTodayLog(){
   const total = getDayTotal(dayData);
   outputText += `\n👉今日合计：总热量${total.kcal} kcal，总蛋白${total.pro} g\n`;
   navigator.clipboard.writeText(outputText).then(()=>{
-    alert("✅已经复制！直接粘贴发给豆包获取饮食建议");
+    showMsg("✅已复制记录");
   })
 }
 
@@ -387,7 +427,7 @@ function saveAiAdvice(){
   allRecords[dayKey].advice = text;
   saveAllRecords(allRecords);
   renderMonth();
-  alert("✅AI建议保存成功");
+  showMsg("✅AI建议保存成功");
 }
 
 function exportJson(){
@@ -399,6 +439,7 @@ function exportJson(){
   a.download="diet_backup.json";
   a.click();
   URL.revokeObjectURL(url);
+  showMsg("✅备份文件已下载");
 }
 
 function showDayDetail(dayStr){
