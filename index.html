@@ -143,7 +143,6 @@ button:hover{background:#ff66aa;}
     <input style="flex:1" id="choInput" placeholder="碳水 g">
     <input style="flex:1" id="fatInput" placeholder="脂肪 g">
   </div>
-  <textarea id="weightHint" placeholder="补充分量备注（可选）" rows="2"></textarea>
 
   <!-- 📸拍照打卡模块 -->
   <div class="photo-area">
@@ -245,7 +244,6 @@ function addFoodRecord(){
   const cho = Number(document.getElementById("choInput").value)||0;
   const fat = Number(document.getElementById("fatInput").value)||0;
 
-  const weightText = document.getElementById("weightHint").value.trim();
   const mealSel = document.getElementById("mealType").value;
   if(!foodText){alert("请输入食物名称");return;}
 
@@ -256,7 +254,7 @@ function addFoodRecord(){
   all[dayKey].items.push({
     meal:mealSel,
     foodText:foodText,
-    weight:weightText,
+    weight:"",
     photo:capturedImageBase64,
     kcal:kcal,
     pro:pro,
@@ -271,7 +269,6 @@ function addFoodRecord(){
   document.getElementById("proInput").value="";
   document.getElementById("choInput").value="";
   document.getElementById("fatInput").value="";
-  document.getElementById("weightHint").value="";
   capturedImageBase64="";
   renderMonth();
   alert("✅已保存这条记录");
@@ -414,7 +411,7 @@ function showDayDetail(dayStr){
     <div class="meal-item">
       <div>
         <div>${mealMap[it.meal]}｜${it.foodText}</div>
-        <div class="tip">${it.weight||""} · ${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
+        <div class="tip">${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
         ${it.photo ? `<img class="photo-img" src="${it.photo}">` : ""}
       </div>
       <button class="btn-del" onclick="deleteItem('${dayStr}',${idx})">❌删除</button>
