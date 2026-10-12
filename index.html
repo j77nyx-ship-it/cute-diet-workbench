@@ -448,19 +448,17 @@ function autoFillNutrition(){
     }
   }
 
-  // 2) 豆包自然语言格式，如：热量：160kcal，蛋白质：14g，碳水：2g，脂肪：11g，膳食纤维：1g
+  // 2) 豆包自然语言格式，如：热量：约 275 kcal，蛋白质：3 g，碳水：28 g，脂肪：17 g，膳食纤维：1.2 g
   const rules = [
-    {id:"kcalInput", re:[/热量\s*[：:]\s*([\d.]+)/i, /热量\s*([\d.]+)\s*(?:kcal|千卡|大卡)/i]},
-    {id:"proInput",  re:[/蛋白(?:质)?\s*[：:]\s*([\d.]+)/i, /蛋白质?\s*([\d.]+)\s*g/i]},
-    {id:"choInput",  re:[/碳水(?:化合物)?\s*[：:]\s*([\d.]+)/i, /碳水(?:化合物)?\s*([\d.]+)\s*g/i]},
-    {id:"fatInput",  re:[/脂肪\s*[：:]\s*([\d.]+)/i, /脂肪\s*([\d.]+)\s*g/i]},
-    {id:"fibInput",  re:[/(?:膳食)?纤维\s*[：:]\s*([\d.]+)/i, /(?:膳食)?纤维\s*([\d.]+)\s*g/i]}
+    {id:"kcalInput", re:/热量\s*[：:]?\s*(?:约|大约|约等于)?\s*([\d.]+)\s*(?:kcal|千卡|大卡)?/i},
+    {id:"proInput",  re:/蛋白(?:质)?\s*[：:]?\s*(?:约|大约)?\s*([\d.]+)\s*(?:g|克)?/i},
+    {id:"choInput",  re:/碳水(?:化合物)?\s*[：:]?\s*(?:约|大约)?\s*([\d.]+)\s*(?:g|克)?/i},
+    {id:"fatInput",  re:/脂肪\s*[：:]?\s*(?:约|大约)?\s*([\d.]+)\s*(?:g|克)?/i},
+    {id:"fibInput",  re:/(?:膳食)?纤维\s*[：:]?\s*(?:约|大约)?\s*([\d.]+)\s*(?:g|克)?/i}
   ];
   rules.forEach(r=>{
-    for(const re of r.re){
-      const m = text.match(re);
-      if(m){ document.getElementById(r.id).value = parseNum(m[1]); break; }
-    }
+    const m = text.match(r.re);
+    if(m){ document.getElementById(r.id).value = parseNum(m[1]); }
   });
 
   // 3) 顺带识别食物名称，如：鸡蛋（1个）：热量70kcal，蛋白质6g...
