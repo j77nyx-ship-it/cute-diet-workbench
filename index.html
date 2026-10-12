@@ -132,7 +132,7 @@ button:active{transform:translateY(1px);}
 /* 顶部统计 */
 .stat{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(5,1fr);
   gap:10px;
   margin:14px 0;
 }
@@ -169,10 +169,10 @@ button:active{transform:translateY(1px);}
 }
 .stat-row input{width:100%;margin-top:6px;}
 
-/* 营养输入：窄屏变 2 列 */
+/* 营养输入：桌面 5 列 */
 .nutri-grid{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(5,1fr);
   gap:8px;
   margin:8px 0;
 }
@@ -289,7 +289,9 @@ hr.rule{border:none;border-top:1px dashed var(--line);margin:16px 0;}
 /* 窄屏适配 */
 @media (max-width:560px){
   .stat{grid-template-columns:repeat(2,1fr);}
+  .stat .stat-fib{grid-column:1 / -1;}
   .nutri-grid{grid-template-columns:repeat(2,1fr);}
+  .nutri-grid #fibInput{grid-column:1 / -1;}
   .card{padding:16px;}
 }
 </style>
@@ -312,6 +314,7 @@ hr.rule{border:none;border-top:1px dashed var(--line);margin:16px 0;}
     <div><span id="showExBurn">0</span>运动消耗 kcal</div>
     <div><span id="showNetKcal">0</span>净摄入 kcal</div>
     <div><span id="showTotalPro">0</span>蛋白合计 g</div>
+    <div class="stat-fib"><span id="showTotalFib">0</span>纤维合计 g</div>
   </div>
   <div class="stat-row">
     <div>晨起体重(kg)
@@ -331,13 +334,14 @@ hr.rule{border:none;border-top:1px dashed var(--line);margin:16px 0;}
       <option value="dinner">晚餐</option>
       <option value="snack">加餐/零食</option>
     </select>
-    <input id="foodInput" placeholder="食物名称｜热量｜蛋白｜碳水｜脂肪" oninput="autoFillNutrition()">
+    <input id="foodInput" placeholder="粘贴豆包营养文本自动识别，或：食物名｜热量｜蛋白｜碳水｜脂肪｜纤维" oninput="autoFillNutrition()">
   </div>
   <div class="nutri-grid">
     <input id="kcalInput" placeholder="热量 kcal">
     <input id="proInput" placeholder="蛋白质 g">
     <input id="choInput" placeholder="碳水 g">
     <input id="fatInput" placeholder="脂肪 g">
+    <input id="fibInput" placeholder="膳食纤维 g">
   </div>
 
   <div class="photo-area">
@@ -367,23 +371,6 @@ hr.rule{border:none;border-top:1px dashed var(--line);margin:16px 0;}
 </div>
 
 <div class="card">
-  <h3>饮食 AI 助手</h3>
-  <div class="tip">点击「复制记录」，把文本发给豆包，拿到建议再粘贴回来保存。</div>
-  <div class="row">
-    <button onclick="copyTodayLog()">复制【当前选中日期】记录</button>
-  </div>
-  <div class="ai-box">
-    <label class="label" for="aiSuggestInput">粘贴 AI 返回的饮食建议，保存到当前选中日期：</label>
-    <textarea id="aiSuggestInput" style="width:100%;height:120px;"></textarea>
-    <div class="row">
-      <button onclick="saveAiAdvice()">保存建议</button>
-    </div>
-    <div class="label">当日保存的建议：</div>
-    <div class="ai-result" id="aiAdviceShow">暂无</div>
-  </div>
-</div>
-
-<div class="card">
   <label class="label" for="monthPicker">选择月份查看：</label>
   <input type="month" id="monthPicker"/>
   <div class="legend"><b>绿色</b> 正常 800-1000 ｜ <b>蓝色</b> 偏少 &lt;800 ｜ <b>橙色</b> 超标 &gt;1000 ｜ <b>灰色</b> 无记录</div>
@@ -398,6 +385,23 @@ hr.rule{border:none;border-top:1px dashed var(--line);margin:16px 0;}
   </div>
   <div class="calendar-grid" id="calendarBox"></div>
   <div class="day-detail" id="dayDetailBox"></div>
+</div>
+
+<div class="card">
+  <h3>饮食 AI 助手</h3>
+  <div class="tip">点击「复制记录」，把文本发给豆包，拿到建议再粘贴回来保存。</div>
+  <div class="row">
+    <button onclick="copyTodayLog()">复制【当前选中日期】记录</button>
+  </div>
+  <div class="ai-box">
+    <label class="label" for="aiSuggestInput">粘贴 AI 返回的饮食建议，保存到当前选中日期：</label>
+    <textarea id="aiSuggestInput" style="width:100%;height:120px;"></textarea>
+    <div class="row">
+      <button onclick="saveAiAdvice()">保存建议</button>
+    </div>
+    <div class="label">当日保存的建议：</div>
+    <div class="ai-result" id="aiAdviceShow">暂无</div>
+  </div>
 </div>
 
 <div class="modal" id="imgModal" onclick="closeModal()">
@@ -421,15 +425,49 @@ function showMsg(text,isSuccess=true){
   setTimeout(()=>{box.style.display="none";},1800);
 }
 
+function parseNum(raw){
+  const m = String(raw==null?"":raw).match(/[\d.]+/);
+  return m ? Number(m[0]) : 0;
+}
+
+// 粘贴豆包营养文本自动识别填充（兼容竖线格式与自然语言格式）
 function autoFillNutrition(){
   const text = document.getElementById("foodInput").value.trim();
-  if(!text.includes("｜")) return;
-  const parts = text.split("｜");
-  if(parts.length >=5){
-    document.getElementById("kcalInput").value = parts[1].trim();
-    document.getElementById("proInput").value = parts[2].trim();
-    document.getElementById("choInput").value = parts[3].trim();
-    document.getElementById("fatInput").value = parts[4].trim();
+  if(!text) return;
+
+  // 1) 竖线格式：食物名｜热量｜蛋白｜碳水｜脂肪｜纤维
+  if(text.includes("｜") || text.includes("|")){
+    const parts = text.split(/[｜|]/);
+    if(parts.length >= 2){
+      document.getElementById("kcalInput").value = parseNum(parts[1]);
+      if(parts[2]) document.getElementById("proInput").value = parseNum(parts[2]);
+      if(parts[3]) document.getElementById("choInput").value = parseNum(parts[3]);
+      if(parts[4]) document.getElementById("fatInput").value = parseNum(parts[4]);
+      if(parts[5]) document.getElementById("fibInput").value = parseNum(parts[5]);
+      return;
+    }
+  }
+
+  // 2) 豆包自然语言格式，如：热量：160kcal，蛋白质：14g，碳水：2g，脂肪：11g，膳食纤维：1g
+  const rules = [
+    {id:"kcalInput", re:[/热量\s*[：:]\s*([\d.]+)/i, /热量\s*([\d.]+)\s*(?:kcal|千卡|大卡)/i]},
+    {id:"proInput",  re:[/蛋白(?:质)?\s*[：:]\s*([\d.]+)/i, /蛋白质?\s*([\d.]+)\s*g/i]},
+    {id:"choInput",  re:[/碳水(?:化合物)?\s*[：:]\s*([\d.]+)/i, /碳水(?:化合物)?\s*([\d.]+)\s*g/i]},
+    {id:"fatInput",  re:[/脂肪\s*[：:]\s*([\d.]+)/i, /脂肪\s*([\d.]+)\s*g/i]},
+    {id:"fibInput",  re:[/(?:膳食)?纤维\s*[：:]\s*([\d.]+)/i, /(?:膳食)?纤维\s*([\d.]+)\s*g/i]}
+  ];
+  rules.forEach(r=>{
+    for(const re of r.re){
+      const m = text.match(re);
+      if(m){ document.getElementById(r.id).value = parseNum(m[1]); break; }
+    }
+  });
+
+  // 3) 顺带识别食物名称，如：鸡蛋（1个）：热量70kcal，蛋白质6g...
+  const stop = /^(热量|能量|每100|每份|营养|成分|约)/;
+  const nm = text.match(/^(.{1,20})[：:]/);
+  if(nm && !stop.test(nm[1]) && nm[1].indexOf("｜") === -1){
+    document.getElementById("foodInput").value = nm[1].trim();
   }
 }
 
@@ -525,6 +563,7 @@ function bindWeightInput(){
   document.getElementById("showExBurn").innerText = t.exBurn;
   document.getElementById("showNetKcal").innerText = t.net;
   document.getElementById("showTotalPro").innerText = t.pro.toFixed(1);
+  document.getElementById("showTotalFib").innerText = t.fib.toFixed(1);
 }
 
 function addFoodRecord(){
@@ -533,6 +572,7 @@ function addFoodRecord(){
   const pro = Number(document.getElementById("proInput").value)||0;
   const cho = Number(document.getElementById("choInput").value)||0;
   const fat = Number(document.getElementById("fatInput").value)||0;
+  const fib = Number(document.getElementById("fibInput").value)||0;
 
   const mealSel = document.getElementById("mealType").value;
   if(!foodText){
@@ -553,6 +593,7 @@ function addFoodRecord(){
     pro:pro,
     cho:cho,
     fat:fat,
+    fib:fib,
     ts:Date.now()
   });
   saveAllRecords(all);
@@ -562,6 +603,7 @@ function addFoodRecord(){
   document.getElementById("proInput").value="";
   document.getElementById("choInput").value="";
   document.getElementById("fatInput").value="";
+  document.getElementById("fibInput").value="";
   document.getElementById("previewBox").innerHTML="";
   capturedImageBase64="";
 
@@ -623,12 +665,13 @@ function clearToday(){
 }
 
 function getDayTotal(dayData){
-  if(!dayData) return {kcal:0, pro:0, exBurn:0};
-  let kcal=0,pro=0,exBurn=0;
+  if(!dayData) return {kcal:0, pro:0, exBurn:0, fib:0};
+  let kcal=0,pro=0,exBurn=0,fib=0;
   if(Array.isArray(dayData.items)){
     dayData.items.forEach(i=>{
       kcal += i.kcal;
       pro += i.pro;
+      fib += i.fib || 0;
     })
   }
   if(Array.isArray(dayData.exercises)){
@@ -636,7 +679,7 @@ function getDayTotal(dayData){
       exBurn += e.burn;
     })
   }
-  return {kcal,pro,exBurn, net: kcal - exBurn};
+  return {kcal,pro,exBurn,fib, net: kcal - exBurn};
 }
 
 function getCalClass(kcal){
@@ -698,10 +741,10 @@ function copyTodayLog(){
   if(dayData.wNight) outputText += `晚间体重：${dayData.wNight}kg\n`;
 
   dayData.items.forEach(it=>{
-    outputText += `${mealMap[it.meal]}：${it.foodText}\n热量：${it.kcal}kcal，蛋白${it.pro}g，碳水${it.cho}g，脂肪${it.fat}g\n`;
+    outputText += `${mealMap[it.meal]}：${it.foodText}\n热量：${it.kcal}kcal，蛋白${it.pro}g，碳水${it.cho}g，脂肪${it.fat}g，膳食纤维${it.fib||0}g\n`;
   })
   const total = getDayTotal(dayData);
-  outputText += `\n👉今日合计：总热量${total.kcal} kcal，运动消耗${total.exBurn} kcal，净摄入${total.net}kcal，总蛋白${total.pro} g\n`;
+  outputText += `\n👉今日合计：总热量${total.kcal} kcal，运动消耗${total.exBurn} kcal，净摄入${total.net}kcal，总蛋白${total.pro} g，膳食纤维${total.fib.toFixed(1)} g\n`;
   if(Array.isArray(dayData.exercises) && dayData.exercises.length>0){
     outputText += `👉运动记录：\n`;
     dayData.exercises.forEach(e=>outputText+=`${e.name}，消耗${e.burn}kcal\n`);
@@ -756,7 +799,7 @@ function showDayDetail(dayStr){
   const dayTotal = getDayTotal(dayData);
   const mealMap = {breakfast:"早餐",lunch:"午餐",dinner:"晚餐",snack:"加餐"};
 
-  let html = `<div class="stat-line"><strong>${dayStr}</strong>　总热量 ${dayTotal.kcal} kcal｜运动消耗 ${dayTotal.exBurn} kcal｜净摄入 ${dayTotal.net} kcal｜蛋白 ${dayTotal.pro.toFixed(1)}g</div>`;
+  let html = `<div class="stat-line"><strong>${dayStr}</strong>　总热量 ${dayTotal.kcal} kcal｜运动消耗 ${dayTotal.exBurn} kcal｜净摄入 ${dayTotal.net} kcal｜蛋白 ${dayTotal.pro.toFixed(1)}g｜纤维 ${dayTotal.fib.toFixed(1)}g</div>`;
   html += `<span class="tip">早：${dayData.wMorning||"无记录"} kg｜晚：${dayData.wNight||"无记录"} kg</span>`;
 
   dayData.items.forEach((it,idx)=>{
@@ -764,7 +807,7 @@ function showDayDetail(dayStr){
     <div class="meal-item">
       <div>
         <div>${mealMap[it.meal]}｜${it.foodText}</div>
-        <div class="tip">${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g</div>
+        <div class="tip">${it.kcal}kcal 蛋白${it.pro}g 碳水${it.cho}g 脂肪${it.fat}g 纤维${it.fib||0}g</div>
         ${it.photo ? `<img class="photo-img" src="${it.photo}" onclick="openModal('${it.photo}')">` : ""}
       </div>
       <button class="btn-del" onclick="deleteItem('${dayStr}',${idx})">删除</button>
